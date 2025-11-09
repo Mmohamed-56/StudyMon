@@ -381,19 +381,39 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   }
 
   const handlePlayerFaint = async () => {
-    // Check if player has more creatures
-    const aliveParty = playerTeam.filter(c => 
-      c.party_position !== null && 
-      c.id !== activePlayerCreature.userCreatureId &&
-      (c.current_hp ?? Math.floor(c.creatures.base_hp + (c.level * 2))) > 0
-    )
+    // Save current creature's fainted state first
+    await saveBattleResults(false, true)
 
-    if (aliveParty.length > 0) {
-      setBattleLog(prev => [...prev, 'Choose another creature to continue!'])
-      setShowSwitchMenu(true)
-    } else {
-      setBattleLog(prev => [...prev, 'All your creatures fainted! You lost!'])
-      await saveBattleResults(false)
+    // Reload fresh party data from database to check for alive creatures
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: freshParty } = await supabase
+        .from('user_creatures')
+        .select('*, creatures(*)')
+        .eq('user_id', user.id)
+        .not('party_position', 'is', null)
+        .order('party_position', { ascending: true })
+
+      // Check for alive creatures (excluding current one)
+      const aliveParty = freshParty?.filter(c => 
+        c.id !== activePlayerCreature.userCreatureId &&
+        c.current_hp > 0
+      ) || []
+
+      if (aliveParty.length > 0) {
+        setBattleLog(prev => [...prev, 'Choose another creature to continue!'])
+        setShowSwitchMenu(true)
+      } else {
+        setBattleLog(prev => [...prev, 'All your creatures fainted! You lost!'])
+        setTimeout(() => {
+          onExit()
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Error checking party:', error)
+      onExit()
     }
   }
 
@@ -445,7 +465,17 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Add wild creature to user's collection
+      // Check current party size
+      const { data: partyData } = await supabase
+        .from('user_creatures')
+        .select('id')
+        .eq('user_id', user.id)
+        .not('party_position', 'is', null)
+
+      const partySize = partyData?.length || 0
+      const partyPosition = partySize < 4 ? partySize + 1 : null
+
+      // Add wild creature to user's collection (auto-add to party if space available)
       const { error } = await supabase
         .from('user_creatures')
         .insert({
@@ -454,6 +484,7 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
           level: wildCreature.level,
           current_hp: wildHP,
           current_sp: 0,
+          party_position: partyPosition,
           caught_method: 'caught',
           caught_at: new Date().toISOString()
         })
@@ -462,10 +493,14 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
         console.error('Error catching creature:', error)
         setBattleLog(prev => [...prev, 'Catch failed! Try again later.'])
       } else {
-        setBattleLog(prev => [...prev, `You caught ${wildCreature.name}!`])
+        const addedToParty = partyPosition !== null
+        setBattleLog(prev => [...prev, 
+          `You caught ${wildCreature.name}!`,
+          addedToParty ? `${wildCreature.name} was added to your party!` : 'Party is full! Manage your party in the Party tab.'
+        ])
         setTimeout(() => {
           onExit()
-        }, 2000)
+        }, 2500)
       }
     } catch (error) {
       console.error('Error:', error)

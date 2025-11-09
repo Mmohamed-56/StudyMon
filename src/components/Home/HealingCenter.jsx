@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../utils/supabase'
 import { generateQuestionsWithClaude } from '../../utils/aiService'
 import heartIcon from '../../assets/icons/heart.png'
+import CreatureSprite from '../Shared/CreatureSprite'
 
 function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
   const [selectedCreature, setSelectedCreature] = useState(null)
@@ -150,7 +151,12 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
                       className="bg-gradient-to-r from-rose-900 to-pink-950 rounded-2xl p-4 border-3 border-rose-800 shadow-md cursor-pointer hover:shadow-lg transition-all hover:from-rose-800 hover:to-pink-900"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="text-5xl">{pc.creatures.sprite}</div>
+                        <CreatureSprite 
+                          creatureName={pc.creatures.name}
+                          emoji={pc.creatures.sprite}
+                          className="text-5xl"
+                          size="w-20 h-20"
+                        />
                         <div className="flex-1">
                           <p className="text-amber-100 font-bold text-lg">{pc.creatures.name}</p>
                           <p className="text-rose-200 text-sm">Lv. {pc.level}</p>
@@ -178,7 +184,14 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
           <div>
             <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl p-6 mb-6 border-4 border-dashed border-rose-800 shadow-inner">
               <div className="text-center mb-4">
-                <div className="text-6xl mb-2">{selectedCreature.creatures.sprite}</div>
+                <div className="flex justify-center mb-2">
+                  <CreatureSprite 
+                    creatureName={selectedCreature.creatures.name}
+                    emoji={selectedCreature.creatures.sprite}
+                    className="text-6xl"
+                    size="w-24 h-24"
+                  />
+                </div>
                 <p className="text-amber-100 font-bold text-lg">{selectedCreature.creatures.name}</p>
               </div>
 
