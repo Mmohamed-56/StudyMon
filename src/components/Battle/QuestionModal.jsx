@@ -88,22 +88,75 @@ function QuestionModal({
     }
   }
 
-  const submitAnswer = () => {
+  const submitAnswer = async () => {
     const correctAnswer = question.answer || question.correct_answer || '4'
-    const correct = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
-    setIsCorrect(correct)
-    setShowResult(true)
+    setLoading(true)
 
-    if (correct) {
-      const spReward = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
-      setTimeout(() => {
-        onCorrectAnswer(spReward, difficulty)
-        onClose()
-      }, 1500)
-    } else {
-      setTimeout(() => {
-        onClose()
-      }, 2000)
+    // Use Claude to validate answer (more flexible)
+    try {
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      
+      let correct = false
+      
+      if (!isDev) {
+        // Production: Use Claude validation
+        const response = await fetch('/.netlify/functions/validate-answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: question.question,
+            correctAnswer: correctAnswer,
+            userAnswer: userAnswer
+          })
+        })
+
+        if (response.ok) {
+          const validation = await response.json()
+          correct = validation.isCorrect
+          console.log('Claude validation:', validation)
+        } else {
+          // Fallback to simple comparison
+          correct = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+        }
+      } else {
+        // Development: Simple comparison
+        correct = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+      }
+
+      setLoading(false)
+      setIsCorrect(correct)
+      setShowResult(true)
+
+      if (correct) {
+        const spReward = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
+        setTimeout(() => {
+          onCorrectAnswer(spReward, difficulty)
+          onClose()
+        }, 1500)
+      } else {
+        setTimeout(() => {
+          onClose()
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Error validating answer:', error)
+      // Fallback to simple comparison
+      setLoading(false)
+      const correct = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+      setIsCorrect(correct)
+      setShowResult(true)
+
+      if (correct) {
+        const spReward = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
+        setTimeout(() => {
+          onCorrectAnswer(spReward, difficulty)
+          onClose()
+        }, 1500)
+      } else {
+        setTimeout(() => {
+          onClose()
+        }, 2000)
+      }
     }
   }
 
@@ -222,10 +275,10 @@ function QuestionModal({
                 </button>
                 <button
                   onClick={submitAnswer}
-                  disabled={!userAnswer.trim()}
+                  disabled={!userAnswer.trim() || loading}
                   className="bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 disabled:text-stone-500 font-bold py-4 px-6 rounded-2xl transition-all shadow-lg border-4 border-double border-blue-950 disabled:border-stone-950"
                 >
-                  Submit
+                  {loading ? 'Checking...' : 'Submit'}
                 </button>
               </div>
             </div>

@@ -2,11 +2,17 @@ import { useState } from 'react'
 import { supabase } from '../../utils/supabase'
 import notepadIcon from '../../assets/icons/notepad.png'
 
+const QUESTION_SOURCES = {
+  GENERAL: 'general',
+  PDF: 'pdf'
+}
+
 function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
   const [showNewTopic, setShowNewTopic] = useState(false)
   const [newTopicName, setNewTopicName] = useState('')
   const [newTopicDescription, setNewTopicDescription] = useState('')
   const [uploadingFile, setUploadingFile] = useState(false)
+  const [questionSource, setQuestionSource] = useState(currentTopic?.question_source || QUESTION_SOURCES.GENERAL)
   const [loading, setLoading] = useState(false)
 
   const handleCreateTopic = async (e) => {
