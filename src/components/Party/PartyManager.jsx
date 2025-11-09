@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
 import XPBar from '../Shared/XPBar'
+import CreatureSprite from '../Shared/CreatureSprite'
 
 function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
   const [dragging, setDragging] = useState(null)
@@ -187,7 +188,14 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                         <span className="text-white font-bold text-sm">✕</span>
                       </button>
 
-                      <div className="text-5xl mb-2 drop-shadow-lg mt-4">{creature.creatures.sprite}</div>
+                      <div className="flex justify-center mb-2 mt-4">
+                        <CreatureSprite 
+                          creatureName={creature.creatures.name}
+                          emoji={creature.creatures.sprite}
+                          className="text-5xl drop-shadow-lg"
+                          size="w-20 h-20"
+                        />
+                      </div>
                       <p className="text-amber-50 font-bold drop-shadow text-sm">{creature.creatures.name}</p>
                       <p className="text-green-200 text-xs font-semibold">Lv. {creature.level}</p>
                       
@@ -272,7 +280,14 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent group-hover:from-white/10 rounded-3xl transition-all"></div>
                     <div className="relative">
-                      <div className="text-5xl mb-2 drop-shadow-lg">{creature.creatures.sprite}</div>
+                      <div className="flex justify-center mb-2">
+                        <CreatureSprite 
+                          creatureName={creature.creatures.name}
+                          emoji={creature.creatures.sprite}
+                          className="text-5xl drop-shadow-lg"
+                          size="w-20 h-20"
+                        />
+                      </div>
                       <p className="text-amber-50 font-bold drop-shadow text-sm">{creature.creatures.name}</p>
                       <p className="text-slate-300 text-xs font-semibold">Lv. {creature.level}</p>
                       

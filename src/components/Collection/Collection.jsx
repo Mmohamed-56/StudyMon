@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
+import CreatureSprite from '../Shared/CreatureSprite'
 import trophyIcon from '../../assets/icons/trophy.png'
 
 function Collection({ playerTeam }) {
@@ -129,7 +130,14 @@ function Collection({ playerTeam }) {
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-3xl"></div>
                     <div className="text-center relative">
-                      <div className="text-6xl mb-2 drop-shadow-lg">{creature.sprite}</div>
+                      <div className="flex justify-center mb-2">
+                        <CreatureSprite 
+                          creatureName={creature.name}
+                          emoji={creature.sprite}
+                          className="text-6xl drop-shadow-lg"
+                          size="w-24 h-24"
+                        />
+                      </div>
                       <p className="text-amber-50 font-bold text-lg drop-shadow">{creature.name}</p>
                       <p className="text-orange-200 text-sm capitalize mb-2 font-semibold">{creature.type}</p>
                       <div className="space-y-1">
@@ -183,7 +191,14 @@ function Collection({ playerTeam }) {
                     
                     {/* Sprite or Question Mark */}
                     {owned ? (
-                      <div className="text-6xl mb-2 drop-shadow-lg">{creature.sprite}</div>
+                      <div className="flex justify-center mb-2">
+                        <CreatureSprite 
+                          creatureName={creature.name}
+                          emoji={creature.sprite}
+                          className="text-6xl drop-shadow-lg"
+                          size="w-24 h-24"
+                        />
+                      </div>
                     ) : (
                       <div className="text-6xl mb-2 opacity-30 filter grayscale">❓</div>
                     )}

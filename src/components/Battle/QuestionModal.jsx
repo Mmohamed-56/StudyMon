@@ -5,6 +5,8 @@ import thinking from '../../assets/icons/thinking.png'
 import star from '../../assets/icons/star.png'
 import gainSP from '../../assets/icons/gainSP.png'
 import catchIcon from '../../assets/icons/catch.png'
+import checkmark from '../../assets/icons/checkmark.png'
+import xcross from '../../assets/icons/xcross.png'
 
 function QuestionModal({ 
   isOpen, 
@@ -323,7 +325,12 @@ function QuestionModal({
             <div className="text-center py-12">
               {isCorrect ? (
                 <>
-                  <div className="text-7xl mb-4">✅</div>
+                  <img 
+                    src={checkmark} 
+                    alt="Correct" 
+                    className="w-24 h-24 mx-auto mb-4" 
+                    style={{ imageRendering: 'pixelated' }} 
+                  />
                   <p className="text-green-400 text-3xl font-bold mb-2">Correct!</p>
                   <p className="text-amber-50 text-xl">
                     +{difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15} SP
@@ -331,7 +338,12 @@ function QuestionModal({
                 </>
               ) : (
                 <>
-                  <div className="text-7xl mb-4">❌</div>
+                  <img 
+                    src={xcross} 
+                    alt="Wrong" 
+                    className="w-24 h-24 mx-auto mb-4" 
+                    style={{ imageRendering: 'pixelated' }} 
+                  />
                   <p className="text-red-400 text-3xl font-bold mb-2">Wrong!</p>
                   <p className="text-amber-50 text-xl">
                     Correct answer: <span className="text-amber-300 font-bold">{question.answer || question.correct_answer}</span>

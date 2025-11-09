@@ -12,6 +12,8 @@ import star from '../../assets/icons/star.png'
 import switchIcon from '../../assets/icons/switch.png'
 import catchIcon from '../../assets/icons/catch.png'
 import thinking from '../../assets/icons/thinking.png'
+import flee from '../../assets/icons/flee.png'
+import CreatureSprite from '../Shared/CreatureSprite'
 
 function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   // Battle state
@@ -666,7 +668,12 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
                 </div>
                 <p className="text-xs text-amber-100 mt-2 font-semibold">{wildHP}/{wildCreature.maxHP} HP</p>
               </div>
-              <span className="text-6xl drop-shadow-lg">{wildCreature.sprite}</span>
+              <CreatureSprite 
+                creatureName={wildCreature.name}
+                emoji={wildCreature.sprite}
+                className="text-6xl drop-shadow-lg"
+                size="w-24 h-24"
+              />
             </div>
           </div>
         </div>
@@ -676,7 +683,12 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
           <div className="inline-block bg-gradient-to-br from-green-800 to-green-900 rounded-2xl p-6 shadow-2xl border-4 border-green-950">
             <p className="text-sm text-amber-200 mb-2 font-bold">{activePlayerCreature.name} Lv.{activePlayerCreature.level}</p>
             <div className="flex items-center gap-4">
-              <span className="text-6xl drop-shadow-lg">{activePlayerCreature.sprite}</span>
+              <CreatureSprite 
+                creatureName={activePlayerCreature.name}
+                emoji={activePlayerCreature.sprite}
+                className="text-6xl drop-shadow-lg"
+                size="w-24 h-24"
+              />
               <div>
                 {/* HP Bar */}
                 <div className="w-48 bg-stone-950 rounded-full h-4 mb-2 border-2 border-stone-900 shadow-inner">
@@ -766,8 +778,8 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
             disabled={!isPlayerTurn || playerHP <= 0}
             className="bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-red-950 disabled:border-stone-950 transition-all shadow-xl"
           >
-            <div className="text-lg">🏃 Flee</div>
-            <div className="text-xs mt-1">Escape Battle</div>
+            <img src={flee} alt="Flee" className="w-8 h-8 mx-auto mb-1" style={{ imageRendering: 'pixelated' }} />
+            <div className="text-xs mt-1">Flee</div>
           </button>
         </div>
 

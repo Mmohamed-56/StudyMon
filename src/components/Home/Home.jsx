@@ -5,6 +5,7 @@ import WeeklyPlanner from './WeeklyPlanner'
 import TopicManager from './TopicManager'
 import HealingCenter from './HealingCenter'
 import XPBar from '../Shared/XPBar'
+import CreatureSprite from '../Shared/CreatureSprite'
 import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
@@ -149,7 +150,14 @@ function Home({ playerTeam, trainerInfo, onUpdate }) {
                     <div key={pc.id} className="bg-gradient-to-b from-green-700 to-green-900 rounded-3xl p-4 text-center border-4 border-double border-green-950 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl"></div>
                       <div className="relative">
-                        <div className="text-5xl mb-2 drop-shadow-lg">{pc.creatures.sprite}</div>
+                        <div className="flex justify-center mb-2">
+                          <CreatureSprite 
+                            creatureName={pc.creatures.name}
+                            emoji={pc.creatures.sprite}
+                            className="text-5xl drop-shadow-lg"
+                            size="w-20 h-20"
+                          />
+                        </div>
                         <p className="text-amber-50 font-bold drop-shadow">{pc.creatures.name}</p>
                         <p className="text-green-200 text-sm font-semibold">Lv. {pc.level}</p>
                         <div className="mt-3 space-y-2">
