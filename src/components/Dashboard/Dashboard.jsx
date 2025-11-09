@@ -6,6 +6,7 @@ import Settings from '../Settings/Settings'
 import Home from '../Home/Home'
 import GymMap from '../GymMap/GymMap'
 import PartyManager from '../Party/PartyManager'
+import TutorialModal from '../Shared/TutorialModal'
 import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
@@ -15,6 +16,7 @@ function Dashboard() {
   const [trainerInfo, setTrainerInfo] = useState(null)
   const [playerTeam, setPlayerTeam] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
     loadTrainerData()
@@ -24,6 +26,13 @@ function Dashboard() {
       setActiveTab(e.detail)
     }
     window.addEventListener('changeTab', handleTabChange)
+    
+    // Check if first time user (show tutorial)
+    const hasSeenTutorial = localStorage.getItem('studymon_tutorial_seen')
+    if (!hasSeenTutorial) {
+      setShowTutorial(true)
+    }
+    
     return () => window.removeEventListener('changeTab', handleTabChange)
   }, [])
 
@@ -118,7 +127,9 @@ function Dashboard() {
               <img 
                 src="https://cdn.discordapp.com/attachments/648370607624421377/1436819472592670732/content.png?ex=6910fde9&is=690fac69&hm=604c22efa767de07f191337d4a4d5c96dda507c97b504461cb014cb4fec7550f&" 
                 alt="StudyMon Logo" 
-                className="h-24 w-auto object-contain drop-shadow-2xl"
+                className="h-24 w-auto object-contain drop-shadow-2xl cursor-pointer"
+                onClick={() => setShowTutorial(true)}
+                title="Click to view tutorial"
               />
             </div>
             <div className="flex gap-3">
@@ -196,6 +207,15 @@ function Dashboard() {
         )}
 
       </div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal 
+        isOpen={showTutorial} 
+        onClose={() => {
+          setShowTutorial(false)
+          localStorage.setItem('studymon_tutorial_seen', 'true')
+        }}
+      />
     </div>
   )
 }
