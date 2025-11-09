@@ -133,7 +133,7 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
           // Creature Selection
           <div>
             {needsHealing.length === 0 ? (
-              <p className="text-rose-200 text-center py-8 font-semibold">All your StudyMons are healthy! 🎉</p>
+              <p className="text-rose-200 text-center py-8 font-semibold">All your StudyMons are healthy!</p>
             ) : (
               <div className="space-y-3">
                 <p className="text-rose-200 font-semibold mb-4 text-center">
