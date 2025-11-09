@@ -198,10 +198,21 @@ function Battle({
       setLoading(false)
 
       // Play gym leader intro voice (only for first creature)
-      if (mode === 'gym' && gymCreatureIndex === 0 && gymData.gym.intro_line) {
-        setTimeout(() => {
-          audioManager.playVoice(gymData.gym.intro_line, gymData.gym.voice_id)
-        }, 500)
+      if (mode === 'gym' && gymCreatureIndex === 0) {
+        console.log('🎮 Gym battle started, checking for intro...', {
+          hasIntroLine: !!gymData.gym.intro_line,
+          introLine: gymData.gym.intro_line,
+          voiceId: gymData.gym.voice_id
+        })
+        
+        if (gymData.gym.intro_line) {
+          setTimeout(() => {
+            console.log('🎤 Playing gym leader intro...')
+            audioManager.playVoice(gymData.gym.intro_line, gymData.gym.voice_id)
+          }, 500)
+        } else {
+          console.warn('⚠️ No intro_line found for gym leader!')
+        }
       }
     }
   }

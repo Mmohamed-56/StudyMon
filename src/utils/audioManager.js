@@ -35,14 +35,26 @@ class AudioManager {
 
   // Play voice line using ElevenLabs
   async playVoice(text, voiceId = 'pNInz6obpgDQGcFmaJgB') {
-    if (!this.voiceEnabled) return
+    console.log('🎤 playVoice called:', { text, voiceId, enabled: this.voiceEnabled })
+    
+    if (!this.voiceEnabled) {
+      console.log('Voice disabled in settings')
+      return
+    }
+
+    if (!text) {
+      console.warn('No text provided for voice')
+      return
+    }
 
     try {
       // Check if we're on localhost (skip in dev)
       if (window.location.hostname === 'localhost') {
-        console.log('Voice (dev mode):', text)
+        console.log('🎤 Voice (dev mode - skipping ElevenLabs):', text)
         return
       }
+
+      console.log('🎤 Calling ElevenLabs API...')
 
       const response = await fetch('/.netlify/functions/generate-voice', {
         method: 'POST',
@@ -51,10 +63,13 @@ class AudioManager {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Voice API error:', errorText)
         throw new Error(`Voice generation failed: ${response.status}`)
       }
 
       const { audio, mimeType } = await response.json()
+      console.log('🎤 Audio received, playing...')
 
       // Convert base64 to audio and play
       const audioBlob = this.base64ToBlob(audio, mimeType)
@@ -63,15 +78,17 @@ class AudioManager {
       audioElement.volume = this.volume
 
       await audioElement.play()
+      console.log('🎤 Voice playing!')
       
       // Clean up after playing
       audioElement.onended = () => {
         URL.revokeObjectURL(audioUrl)
+        console.log('🎤 Voice finished')
       }
 
       return audioElement
     } catch (error) {
-      console.error('Error playing voice:', error)
+      console.error('❌ Error playing voice:', error)
     }
   }
 
