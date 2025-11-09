@@ -364,6 +364,10 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
   const handleSwitch = async (newCreature) => {
     setShowSwitchMenu(false)
+    
+    // Save current creature's HP/SP first
+    await saveBattleResults(false, true) // Don't exit, just save
+    
     setLoading(true)
 
     // Load new creature's skills
@@ -374,6 +378,9 @@ function Battle({ playerTeam, onExit, currentTopic }) {
       level: newCreature.level,
       userCreatureId: newCreature.id
     })
+    
+    // Add max_sp to player object
+    player.max_sp = newCreature.max_sp || 50
 
     const maxHP = Math.floor(newCreature.creatures.base_hp + (newCreature.level * 2))
     const currentHP = newCreature.current_hp ?? maxHP
@@ -385,7 +392,12 @@ function Battle({ playerTeam, onExit, currentTopic }) {
     setPlayerSP(currentSP)
     setBattleLog(prev => [...prev, `Go, ${player.name}!`])
     setLoading(false)
-    setIsPlayerTurn(true)
+    
+    // Wild creature gets a turn after switch
+    setIsPlayerTurn(false)
+    setTimeout(() => {
+      wildTurn()
+    }, 1000)
   }
 
   const handleCatch = () => {
@@ -425,16 +437,24 @@ function Battle({ playerTeam, onExit, currentTopic }) {
     }
   }
 
-  const saveBattleResults = async (won) => {
+  const saveBattleResults = async (won, justSave = false) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      console.log('Saving battle results:', { 
+        creatureId: activePlayerCreature.userCreatureId,
+        hp: playerHP, 
+        sp: playerSP,
+        won, 
+        justSave 
+      })
 
       // Save HP and SP
       const maxHP = Math.floor(activePlayerCreature.base_hp + (activePlayerCreature.level * 2))
       const hpToSave = Math.max(0, Math.min(playerHP, maxHP))
 
-      await supabase
+      const { data, error } = await supabase
         .from('user_creatures')
         .update({ 
           current_hp: hpToSave,
@@ -442,9 +462,16 @@ function Battle({ playerTeam, onExit, currentTopic }) {
         })
         .eq('id', activePlayerCreature.userCreatureId)
         .eq('user_id', user.id)
+        .select()
+
+      if (error) {
+        console.error('Error saving HP/SP:', error)
+      } else {
+        console.log('Saved successfully:', data)
+      }
 
       // If won, increment battles_won
-      if (won) {
+      if (won && !justSave) {
         await supabase.rpc('increment_battles_won', { user_id: user.id })
       }
     } catch (error) {

@@ -51,7 +51,10 @@ export const handler = async (event, context) => {
         max_tokens: 1024,
         messages: [{
           role: 'user',
-          content: `Generate ${count} ${difficulty} difficulty question(s) about ${topic}.
+          content: `Generate ${count} UNIQUE ${difficulty} difficulty question(s) about ${topic}.
+
+IMPORTANT: Make each question DIFFERENT and UNIQUE. Do not repeat questions.
+Add some randomness - use different examples, formulas, or scenarios each time.
 
 Format as JSON array:
 [{
@@ -62,10 +65,15 @@ Format as JSON array:
 
 Requirements:
 - Questions should be clear and educational
+- Make each question UNIQUE and varied
 - Answers should be concise (1-3 words when possible)
 - For multiple choice, answers should be unambiguous
 - Match the difficulty level appropriately
-- Return ONLY the JSON array, no other text`
+- Use different examples/scenarios to avoid repetition
+- Return ONLY the JSON array, no other text
+
+Current timestamp: ${Date.now()} (use this for randomness)`
+        }]
         }]
       })
     })

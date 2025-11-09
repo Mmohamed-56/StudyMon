@@ -84,6 +84,27 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
     setQuestion(null)
     setShowResult(false)
     setUserAnswer('')
+    setIsCorrect(false)
+  }
+
+  const tryAgain = async () => {
+    // Reset and generate NEW question
+    setShowResult(false)
+    setUserAnswer('')
+    setIsCorrect(false)
+    setQuestion(null)
+    setLoading(true)
+
+    try {
+      // Generate a fresh question
+      const questions = await generateQuestionsWithClaude(currentTopic.topic_name, 'medium', 1)
+      setQuestion(questions[0])
+    } catch (error) {
+      console.error('Error generating new question:', error)
+      alert('Error generating question. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -208,10 +229,7 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
                           <p className="text-amber-200 text-sm mb-2">Correct answer:</p>
                           <p className="text-amber-100 font-bold">{question.answer}</p>
                           <button
-                            onClick={() => {
-                              setShowResult(false)
-                              setUserAnswer('')
-                            }}
+                            onClick={tryAgain}
                             className="mt-4 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-amber-50 font-bold px-6 py-2 rounded-full border-4 border-double border-blue-950 shadow-lg transition-all relative overflow-hidden group"
                           >
                             <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
