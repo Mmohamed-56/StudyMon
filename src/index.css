@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Pixel-perfect rendering for pixel art */
+img.pixelated,
+.pixelated img {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Ensure all images in the app render crisply */
+img[src*=".gif"] {
+  image-rendering: pixelated;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1917;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #78716c;
+  border-radius: 6px;
+  border: 2px solid #1c1917;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a29e;
+}
