@@ -1,4 +1,12 @@
 import { useState } from 'react'
+import star from '../../assets/icons/star.png'
+import switchIcon from '../../assets/icons/switch.png'
+import notepad from '../../assets/icons/notepad.png'
+import sword from '../../assets/icons/sword.png'
+import gainSP from '../../assets/icons/gainSP.png'
+import catchIcon from '../../assets/icons/catch.png'
+import heart from '../../assets/icons/heart.png'
+import trophy from '../../assets/icons/trophy.png'
 
 function TutorialModal({ isOpen, onClose }) {
   const [currentStep, setCurrentStep] = useState(0)
@@ -7,47 +15,47 @@ function TutorialModal({ isOpen, onClose }) {
     {
       title: "Welcome to StudyMon!",
       content: "Study smarter by catching and training StudyMons through answering questions!",
-      icon: "🎮"
+      icon: star
     },
     {
       title: "Step 1: Set Up Your Party",
       content: "Go to the Party tab and add your StudyMons to your active party (up to 4). Your starter is already in your collection!",
-      icon: "🎒"
+      icon: switchIcon
     },
     {
       title: "Step 2: Choose Your Study Topic",
       content: "In the Home tab, set your active study topic. Questions in battles and healing will be based on this topic!",
-      icon: "📚"
+      icon: notepad
     },
     {
       title: "Step 3: Battle & Learn",
       content: "Enter battles to train your StudyMons! Answer questions to gain SP (Skill Points), then use skills to attack!",
-      icon: "⚔️"
+      icon: sword
     },
     {
       title: "Gain SP by Answering",
-      content: "Click 'Gain SP' and choose a difficulty. Correct answers give you 5 (Easy), 10 (Medium), or 15 (Hard) SP!",
-      icon: "📝"
+      content: "Click 'Gain SP' and choose a difficulty. Correct answers give you SP based on difficulty!",
+      icon: gainSP
     },
     {
       title: "Use Skills to Attack",
       content: "Spend SP to use your StudyMon's skills! Stronger skills cost more SP but deal more damage.",
-      icon: "💥"
+      icon: sword
     },
     {
       title: "Catch New StudyMons",
-      content: "When a wild StudyMon's HP drops below 30%, you can attempt to catch it by answering a question!",
-      icon: "⚡"
+      content: "When a wild StudyMon's HP drops below 50%, you can attempt to catch it by answering a question!",
+      icon: catchIcon
     },
     {
       title: "Heal Your Team",
       content: "Visit the Healing Center in the Home tab to restore your StudyMons' HP by answering questions!",
-      icon: "❤️"
+      icon: heart
     },
     {
       title: "Ready to Study!",
       content: "Use the Study Timer, manage weekly tasks, and track your progress. Good luck, Trainer!",
-      icon: "🌟"
+      icon: trophy
     }
   ]
 
@@ -82,7 +90,12 @@ function TutorialModal({ isOpen, onClose }) {
 
           {/* Content */}
           <div className="text-center mb-8">
-            <div className="text-7xl mb-4">{step.icon}</div>
+            <img 
+              src={step.icon} 
+              alt={step.title}
+              className="w-24 h-24 mx-auto mb-4"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <h2 className="text-3xl font-bold text-amber-50 mb-4 drop-shadow-lg">
               {step.title}
             </h2>

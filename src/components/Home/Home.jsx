@@ -19,6 +19,32 @@ function Home({ playerTeam, trainerInfo, onUpdate }) {
     loadTopics()
   }, [])
 
+  // Subscribe to study time updates in real-time
+  useEffect(() => {
+    if (!trainerInfo?.user_id) return
+
+    const channel = supabase
+      .channel('study_time_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_progress',
+          filter: `user_id=eq.${trainerInfo.user_id}`
+        },
+        () => {
+          // Trigger a refresh when study time updates
+          onUpdate()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [trainerInfo, onUpdate])
+
   const loadTopics = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -66,6 +92,10 @@ function Home({ playerTeam, trainerInfo, onUpdate }) {
         .update({ is_active: true })
         .eq('id', topic.id)
     }
+    
+    // Trigger a full data refresh to update all components
+    await onUpdate()
+    await loadTopics()
   }
 
   if (loading) {

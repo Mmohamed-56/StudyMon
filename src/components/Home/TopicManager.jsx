@@ -17,6 +17,7 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
   const [contextSuggestions, setContextSuggestions] = useState([])
   const [selectedContext, setSelectedContext] = useState('')
   const [generatingContexts, setGeneratingContexts] = useState(false)
+  const [switchingTopic, setSwitchingTopic] = useState(false)
 
   const generateTopicContexts = async () => {
     if (!newTopicName.trim()) return
@@ -226,7 +227,12 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
           {topics.map(topic => (
             <div
               key={topic.id}
-              onClick={() => onTopicChange(topic)}
+              onClick={async () => {
+                if (currentTopic?.id === topic.id) return // Already active
+                setSwitchingTopic(true)
+                await onTopicChange(topic)
+                setTimeout(() => setSwitchingTopic(false), 500)
+              }}
               className={`rounded-2xl p-5 cursor-pointer transition-all border-4 border-double shadow-lg relative overflow-hidden ${
                 currentTopic?.id === topic.id
                   ? 'bg-gradient-to-b from-amber-600 to-amber-800 border-amber-950'
@@ -416,6 +422,18 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* Topic Switching Overlay */}
+        {switchingTopic && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center">
+            <div className="bg-gradient-to-br from-purple-800 to-indigo-900 rounded-3xl p-8 border-8 border-purple-950 shadow-2xl">
+              <div className="flex items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-amber-500 border-t-transparent"></div>
+                <p className="text-amber-50 font-bold text-xl">Switching topic...</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -24,6 +24,10 @@ function StudyTimer({ trainerInfo }) {
           if (newTime % 10 === 0) {
             saveTimerState(newTime, true)
           }
+          // Increment study time every 60 seconds (1 minute)
+          if (newTime % 60 === 0 && newTime > 0) {
+            incrementStudyTime(1)
+          }
           return newTime
         })
       }, 1000)
@@ -31,11 +35,14 @@ function StudyTimer({ trainerInfo }) {
       setIsRunning(false)
       playChime()
       saveTimerState(0, false)
-      // Update study time in user progress
-      updateStudyTime()
+      // Final increment for any remaining time
+      const remainingMinutes = Math.ceil((selectedDuration * 60 - timeLeft) / 60)
+      if (remainingMinutes > 0) {
+        incrementStudyTime(remainingMinutes)
+      }
     }
     return () => clearInterval(interval)
-  }, [isRunning, timeLeft])
+  }, [isRunning, timeLeft, selectedDuration])
 
   const loadTimerState = async () => {
     try {
@@ -77,16 +84,14 @@ function StudyTimer({ trainerInfo }) {
     }
   }
 
-  const updateStudyTime = async () => {
+  const incrementStudyTime = async (minutes) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const studyMinutes = selectedDuration
-
       await supabase.rpc('increment_study_time', { 
         user_id: user.id, 
-        minutes: studyMinutes 
+        minutes: minutes 
       }).catch(async () => {
         // Fallback if RPC doesn't exist
         const { data: progress } = await supabase
@@ -98,12 +103,12 @@ function StudyTimer({ trainerInfo }) {
         if (progress) {
           await supabase
             .from('user_progress')
-            .update({ study_time: (progress.study_time || 0) + studyMinutes })
+            .update({ study_time: (progress.study_time || 0) + minutes })
             .eq('user_id', user.id)
         }
       })
     } catch (error) {
-      console.error('Error updating study time:', error)
+      console.error('Error incrementing study time:', error)
     }
   }
 

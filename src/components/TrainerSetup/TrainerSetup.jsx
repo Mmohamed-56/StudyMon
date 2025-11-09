@@ -3,6 +3,7 @@ import { supabase } from '../../utils/supabase'
 import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
+import CreatureSprite from '../Shared/CreatureSprite'
 
 function TrainerSetup({ onComplete }) {
   const [step, setStep] = useState(1) // 1=gender, 2=name, 3=starter
@@ -92,7 +93,7 @@ function TrainerSetup({ onComplete }) {
         {/* Step 1: Gender */}
         {step === 1 && (
           <div className="text-center">
-            <h2 className="text-4xl font-bold text-amber-50 mb-10 drop-shadow-lg">Choose Your Gender</h2>
+            <h2 className="text-4xl font-bold text-amber-50 mb-10 drop-shadow-lg">Choose Your Trainer</h2>
             <div className="grid grid-cols-3 gap-6">
               {[
                 { id: 'male', label: 'Male', sprite: maleTrainer },
@@ -177,7 +178,14 @@ function TrainerSetup({ onComplete }) {
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
                   <div className="relative">
-                    <div className="text-7xl mb-3 drop-shadow-lg">{starter.sprite}</div>
+                    <div className="flex justify-center mb-3">
+                      <CreatureSprite 
+                        creatureName={starter.name}
+                        emoji={starter.sprite}
+                        size="w-24 h-24"
+                        className="text-7xl"
+                      />
+                    </div>
                     <p className="font-bold text-xl drop-shadow">{starter.name}</p>
                     <p className="text-sm text-emerald-200 capitalize font-semibold">{starter.type}</p>
                   </div>
