@@ -106,23 +106,23 @@ function TrainerSetup({ onComplete }) {
                     setGender(g.id)
                     setStep(2)
                   }}
-                  className="bg-gradient-to-b from-green-700 to-green-900 hover:from-green-600 hover:to-green-800 text-amber-50 p-8 rounded-3xl text-xl capitalize border-4 border-double border-green-950 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group"
+                  className="bg-gradient-to-b from-green-700 to-green-900 hover:from-green-600 hover:to-green-800 text-amber-50 p-6 rounded-3xl text-lg border-4 border-double border-green-950 shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group flex flex-col items-center justify-center"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
-                  <div className="relative">
+                  <div className="relative flex flex-col items-center">
                     {/* Shadow base */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-3 bg-gradient-to-b from-stone-700/60 to-stone-950/80 rounded-full blur-sm"></div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-3 bg-gradient-to-b from-stone-700/60 to-stone-950/80 rounded-full blur-sm"></div>
                     
                     {/* Trainer sprite preview */}
                     <div className="mb-4">
                       <img 
                         src={g.sprite} 
                         alt={g.label}
-                        className="w-24 h-24 object-contain mx-auto relative z-10"
+                        className="w-24 h-24 object-contain relative z-10"
                         style={{ imageRendering: 'pixelated' }}
                       />
                     </div>
-                    <div className="font-bold">{g.label}</div>
+                    <div className="font-bold whitespace-nowrap">{g.label}</div>
                   </div>
                 </button>
               ))}
