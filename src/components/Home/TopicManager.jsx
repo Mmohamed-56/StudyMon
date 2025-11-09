@@ -135,6 +135,30 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
     }
   }
 
+  const handleChangeQuestionSource = async (source) => {
+    if (!currentTopic) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('user_topics')
+        .update({ question_source: source })
+        .eq('id', currentTopic.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error updating question source:', error)
+        alert('Failed to update question source')
+      } else {
+        onTopicsUpdate()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
   return (
     <div className="bg-gradient-to-br from-indigo-800 via-purple-900 to-violet-950 rounded-3xl p-8 shadow-2xl border-8 border-double border-indigo-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.15),transparent)]"></div>
