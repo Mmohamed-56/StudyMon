@@ -38,9 +38,14 @@ function QuestionModal({
       let generatedQuestion = null
 
       if (currentTopic) {
+        // Build topic string with subtopic if selected
+        const topicString = currentTopic.active_subtopic 
+          ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+          : currentTopic.topic_name
+
         // Use AI to generate topic-specific question
         const questions = await generateQuestionsWithClaude(
-          currentTopic.topic_name, 
+          topicString, 
           diff, 
           1
         )

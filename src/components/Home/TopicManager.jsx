@@ -14,6 +14,9 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
   const [uploadingFile, setUploadingFile] = useState(false)
   const [questionSource, setQuestionSource] = useState(currentTopic?.question_source || QUESTION_SOURCES.GENERAL)
   const [loading, setLoading] = useState(false)
+  const [showSubtopics, setShowSubtopics] = useState(false)
+  const [newSubtopic, setNewSubtopic] = useState('')
+  const [selectedSubtopic, setSelectedSubtopic] = useState(currentTopic?.active_subtopic || null)
 
   const handleCreateTopic = async (e) => {
     e.preventDefault()
@@ -151,6 +154,154 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
       if (error) {
         console.error('Error updating question source:', error)
         alert('Failed to update question source')
+      } else {
+        onTopicsUpdate()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const generateSubtopicsWithAI = async () => {
+    if (!currentTopic) return
+
+    setLoading(true)
+    try {
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      
+      let subtopics = []
+
+      if (!isDev) {
+        // Production: Use Claude
+        const response = await fetch('/.netlify/functions/generate-subtopics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic: currentTopic.topic_name })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          subtopics = data.subtopics
+        }
+      }
+
+      // Fallback or development
+      if (subtopics.length === 0) {
+        // Default suggestions based on topic name
+        const topicLower = currentTopic.topic_name.toLowerCase()
+        if (topicLower.includes('physics')) {
+          subtopics = ["Kinematics", "Newton's Laws", "Energy & Work", "Momentum", "Circular Motion"]
+        } else if (topicLower.includes('biology')) {
+          subtopics = ["Cell Structure", "DNA & Genetics", "Evolution", "Ecology", "Body Systems"]
+        } else if (topicLower.includes('math') || topicLower.includes('calculus')) {
+          subtopics = ["Limits", "Derivatives", "Integrals", "Applications", "Series"]
+        } else if (topicLower.includes('chemistry')) {
+          subtopics = ["Atomic Structure", "Chemical Bonds", "Reactions", "Stoichiometry", "Acids & Bases"]
+        } else {
+          subtopics = ["Introduction", "Fundamentals", "Advanced Concepts", "Applications", "Review"]
+        }
+      }
+
+      // Save suggested subtopics
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('user_topics')
+        .update({ subtopics: subtopics })
+        .eq('id', currentTopic.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error saving subtopics:', error)
+        alert('Failed to save subtopics')
+      } else {
+        onTopicsUpdate()
+      }
+    } catch (error) {
+      console.error('Error generating subtopics:', error)
+      alert('Failed to generate subtopics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddSubtopic = async () => {
+    if (!currentTopic || !newSubtopic.trim()) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const currentSubtopics = currentTopic.subtopics || []
+      const updatedSubtopics = [...currentSubtopics, newSubtopic.trim()]
+
+      const { error } = await supabase
+        .from('user_topics')
+        .update({ subtopics: updatedSubtopics })
+        .eq('id', currentTopic.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error adding subtopic:', error)
+        alert('Failed to add subtopic')
+      } else {
+        setNewSubtopic('')
+        onTopicsUpdate()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const handleRemoveSubtopic = async (subtopic) => {
+    if (!currentTopic) return
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const currentSubtopics = currentTopic.subtopics || []
+      const updatedSubtopics = currentSubtopics.filter(s => s !== subtopic)
+
+      const { error } = await supabase
+        .from('user_topics')
+        .update({ subtopics: updatedSubtopics })
+        .eq('id', currentTopic.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error removing subtopic:', error)
+        alert('Failed to remove subtopic')
+      } else {
+        if (selectedSubtopic === subtopic) {
+          setSelectedSubtopic(null)
+          await handleSelectSubtopic(null)
+        }
+        onTopicsUpdate()
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const handleSelectSubtopic = async (subtopic) => {
+    if (!currentTopic) return
+    
+    setSelectedSubtopic(subtopic)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('user_topics')
+        .update({ active_subtopic: subtopic })
+        .eq('id', currentTopic.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error updating active subtopic:', error)
       } else {
         onTopicsUpdate()
       }
@@ -307,21 +458,122 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
           </div>
         )}
 
-        {/* Current Topic Info */}
+        {/* Active Topic & Subtopic Selector */}
         {currentTopic && (
-          <div className="mt-6 bg-gradient-to-r from-purple-950 to-indigo-950 rounded-2xl p-5 border-4 border-purple-800 shadow-inner">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-purple-200 text-sm font-semibold mb-1">Active Topic:</p>
-                <p className="text-amber-100 font-bold text-lg">{currentTopic.topic_name}</p>
-                {currentTopic.description && (
-                  <p className="text-purple-300 text-sm mt-1">{currentTopic.description}</p>
-                )}
-              </div>
+          <div className="mt-6 space-y-4">
+            {/* Active Topic Info */}
+            <div className="bg-gradient-to-r from-purple-950 to-indigo-950 rounded-2xl p-5 border-4 border-purple-800 shadow-inner">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-purple-200 text-sm font-semibold mb-1">Active Topic:</p>
+                  <p className="text-amber-100 font-bold text-lg">{currentTopic.topic_name}</p>
+                  {currentTopic.description && (
+                    <p className="text-purple-300 text-sm mt-1">{currentTopic.description}</p>
+                  )}
+                </div>
               {currentTopic.documents && currentTopic.documents.length > 0 && (
                 <div className="text-right">
                   <p className="text-purple-200 text-xs mb-1">Study Materials</p>
                   <p className="text-amber-100 font-bold text-2xl">{currentTopic.documents.length}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Subtopic Focus Selector */}
+            {currentTopic.subtopics && currentTopic.subtopics.length > 0 && (
+              <div className="bg-gradient-to-br from-cyan-900 to-teal-950 rounded-2xl p-5 border-4 border-double border-cyan-950 shadow-lg">
+                <h4 className="text-amber-50 font-bold mb-3 text-center">Focus On Subtopic</h4>
+                <select
+                  value={selectedSubtopic || ''}
+                  onChange={(e) => handleSelectSubtopic(e.target.value || null)}
+                  className="w-full bg-stone-900 text-amber-100 border-4 border-cyan-800 rounded-xl px-4 py-3 font-bold focus:outline-none focus:border-cyan-600 transition-colors"
+                >
+                  <option value="">All Subtopics</option>
+                  {currentTopic.subtopics.map((subtopic, index) => (
+                    <option key={index} value={subtopic}>{subtopic}</option>
+                  ))}
+                </select>
+                <p className="text-cyan-200 text-xs mt-2 text-center">
+                  {selectedSubtopic 
+                    ? `Questions focused on: ${selectedSubtopic}`
+                    : `Questions cover all: ${currentTopic.topic_name}`}
+                </p>
+              </div>
+            )}
+
+            {/* Manage Subtopics */}
+            <div className="bg-gradient-to-br from-violet-900 to-purple-950 rounded-2xl p-5 border-4 border-double border-violet-950 shadow-lg">
+              <button
+                onClick={() => setShowSubtopics(!showSubtopics)}
+                className="w-full text-amber-50 font-bold mb-3 text-center flex items-center justify-between hover:text-amber-100 transition-colors"
+              >
+                <span>Manage Subtopics</span>
+                <span className="text-2xl">{showSubtopics ? '−' : '+'}</span>
+              </button>
+              
+              {showSubtopics && (
+                <div className="space-y-3">
+                  {/* Generate with AI Button */}
+                  {(!currentTopic.subtopics || currentTopic.subtopics.length === 0) && (
+                    <button
+                      onClick={generateSubtopicsWithAI}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-3 px-4 rounded-xl border-4 border-double border-purple-950 shadow-lg transition-all"
+                    >
+                      {loading ? '🤖 Generating...' : '🤖 Generate Subtopics with AI'}
+                    </button>
+                  )}
+
+                  {/* Add Subtopic Manually */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newSubtopic}
+                      onChange={(e) => setNewSubtopic(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddSubtopic()}
+                      placeholder="e.g., Kinematics, Free Body Diagrams"
+                      className="flex-1 bg-stone-900 text-amber-100 border-3 border-violet-800 rounded-xl px-4 py-2 focus:outline-none focus:border-violet-600 font-semibold"
+                    />
+                    <button
+                      onClick={handleAddSubtopic}
+                      disabled={!newSubtopic.trim()}
+                      className="bg-gradient-to-b from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold px-4 py-2 rounded-xl border-3 border-green-950 shadow-lg"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Subtopics List */}
+                  {currentTopic.subtopics && currentTopic.subtopics.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-violet-200 text-xs font-semibold">Subtopics ({currentTopic.subtopics.length}):</p>
+                        {currentTopic.subtopics.length > 0 && (
+                          <button
+                            onClick={generateSubtopicsWithAI}
+                            disabled={loading}
+                            className="text-xs bg-violet-700 hover:bg-violet-600 text-amber-100 font-bold px-2 py-1 rounded-full"
+                          >
+                            {loading ? '...' : '🤖 Regenerate'}
+                          </button>
+                        )}
+                      </div>
+                      {currentTopic.subtopics.map((subtopic, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-violet-950/50 rounded-xl px-3 py-2 border-2 border-violet-800"
+                        >
+                          <span className="text-amber-100 font-semibold text-sm">{subtopic}</span>
+                          <button
+                            onClick={() => handleRemoveSubtopic(subtopic)}
+                            className="text-red-300 hover:text-red-100 font-bold"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

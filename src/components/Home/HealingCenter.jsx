@@ -29,8 +29,13 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
     setUserAnswer('')
 
     try {
+      // Build topic string with subtopic if selected
+      const topicString = currentTopic.active_subtopic 
+        ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+        : currentTopic.topic_name
+
       // Generate question using Claude AI
-      const questions = await generateQuestionsWithClaude(currentTopic.topic_name, 'medium', 1)
+      const questions = await generateQuestionsWithClaude(topicString, 'medium', 1)
       setQuestion(questions[0])
     } catch (error) {
       console.error('Error generating question:', error)
@@ -96,8 +101,13 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
     setLoading(true)
 
     try {
+      // Build topic string with subtopic if selected
+      const topicString = currentTopic.active_subtopic 
+        ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+        : currentTopic.topic_name
+
       // Generate a fresh question
-      const questions = await generateQuestionsWithClaude(currentTopic.topic_name, 'medium', 1)
+      const questions = await generateQuestionsWithClaude(topicString, 'medium', 1)
       setQuestion(questions[0])
     } catch (error) {
       console.error('Error generating new question:', error)

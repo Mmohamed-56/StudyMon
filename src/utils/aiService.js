@@ -140,7 +140,7 @@ export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) 
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        topic,
+        topic: topic, // Can be "Physics" or "Physics - Kinematics" (topic + subtopic)
         difficulty,
         count
       })
