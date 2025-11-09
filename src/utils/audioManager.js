@@ -92,12 +92,58 @@ class AudioManager {
     }
   }
 
+  // Sound effect cache
+  soundCache = {}
+
   // Play sound effect
-  playSound(soundName) {
+  async playSound(soundName, description) {
     if (!this.soundEffectsEnabled) return
 
-    // Sound effects will be added later
-    console.log('Sound effect:', soundName)
+    try {
+      // Check cache first
+      if (this.soundCache[soundName]) {
+        const audio = new Audio(this.soundCache[soundName])
+        audio.volume = this.volume
+        audio.play().catch(e => console.log('Sound play blocked:', e))
+        return
+      }
+
+      // For localhost, just log
+      if (window.location.hostname === 'localhost') {
+        console.log('🔔 Sound effect (dev mode):', soundName)
+        return
+      }
+
+      // Generate sound with ElevenLabs
+      console.log('🔔 Generating sound:', soundName)
+      const response = await fetch('/.netlify/functions/generate-sound', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: description,
+          duration: 1.0
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Sound generation failed: ${response.status}`)
+      }
+
+      const { audio, mimeType } = await response.json()
+
+      // Convert and cache
+      const audioBlob = this.base64ToBlob(audio, mimeType)
+      const audioUrl = URL.createObjectURL(audioBlob)
+      this.soundCache[soundName] = audioUrl
+
+      // Play
+      const audioElement = new Audio(audioUrl)
+      audioElement.volume = this.volume
+      audioElement.play().catch(e => console.log('Sound play blocked:', e))
+
+    } catch (error) {
+      console.error('Error playing sound:', error)
+    }
   }
 
   // Play background music

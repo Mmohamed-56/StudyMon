@@ -15,6 +15,7 @@ import thinking from '../../assets/icons/thinking.png'
 import flee from '../../assets/icons/flee.png'
 import CreatureSprite from '../Shared/CreatureSprite'
 import { audioManager } from '../../utils/audioManager'
+import { soundEffects } from '../../data/soundEffects'
 
 function Battle({ 
   playerTeam, 
@@ -78,6 +79,18 @@ function Battle({
       setShowCatchButton(false)
     }
   }, [wildHP, wildCreature, mode])
+
+  useEffect(() => {
+    // Play low HP warning
+    if (activePlayerCreature && playerHP > 0) {
+      const hpPercent = (playerHP / activePlayerCreature.maxHP) * 100
+      if (hpPercent <= 20 && hpPercent > 10) {
+        audioManager.playSound('hp_low', soundEffects.hp_low)
+      } else if (hpPercent <= 10) {
+        audioManager.playSound('hp_critical', soundEffects.hp_critical)
+      }
+    }
+  }, [playerHP, activePlayerCreature])
 
   const loadBattle = async () => {
     // Minimum delay to show running animation (1.5 seconds)
@@ -360,6 +373,9 @@ function Battle({
   }
 
   const handleQuestionAnswer = async (spGained, difficulty) => {
+    // Play SP gain sound
+    audioManager.playSound('sp_gain', soundEffects.sp_gain)
+    
     // Just add SP (no skill execution)
     const newSP = Math.min(playerSP + spGained, activePlayerCreature.max_sp || 50)
     setPlayerSP(newSP)
@@ -386,12 +402,23 @@ function Battle({
     // Calculate damage
     const damage = calculateSkillDamage(attacker, defender, skill)
     
+    // Play attack sound
+    const effectiveness = getTypeEffectiveness(attacker.type, defender.type)
+    if (effectiveness > 1) {
+      audioManager.playSound('super_effective', soundEffects.super_effective)
+    } else if (effectiveness < 1) {
+      audioManager.playSound('not_effective', soundEffects.not_effective)
+    } else {
+      audioManager.playSound('attack_hit', soundEffects.attack_hit)
+    }
+    
     if (isPlayer) {
       const newWildHP = Math.max(0, wildHP - damage)
       setWildHP(newWildHP)
       setBattleLog(prev => [...prev, `${attacker.name} used ${skill.name}! Dealt ${damage} damage!`])
 
       if (newWildHP <= 0) {
+        audioManager.playSound('creature_faint', soundEffects.creature_faint)
         setBattleLog(prev => [...prev, `${wildCreature.name} fainted!`])
         
         // Check if gym mode and more creatures to fight
@@ -408,6 +435,7 @@ function Battle({
           }, 2000)
         } else if (mode === 'gym' && gymCreatureIndex === 2) {
           // All 3 gym creatures defeated - Victory!
+          audioManager.playSound('gym_victory', soundEffects.gym_victory)
           setBattleLog(prev => [...prev, `You defeated ${gymData.gym.gym_leader_name}! You win the ${gymData.gym.badge_name}!`])
           
           // Play victory voice line
@@ -519,6 +547,7 @@ function Battle({
   }
 
   const handleSwitch = async (newCreature) => {
+    audioManager.playSound('creature_switch', soundEffects.creature_switch)
     setShowSwitchMenu(false)
     
     // Save current creature's HP/SP first
@@ -594,6 +623,7 @@ function Battle({
         console.error('Error catching creature:', error)
         setBattleLog(prev => [...prev, 'Catch failed! Try again later.'])
       } else {
+        audioManager.playSound('catch_success', soundEffects.catch_success)
         const addedToParty = partyPosition !== null
         setBattleLog(prev => [...prev, 
           `You caught ${wildCreature.name}!`,
@@ -688,6 +718,7 @@ function Battle({
           .eq('user_id', user.id)
 
         if (!error) {
+          audioManager.playSound('level_up', soundEffects.level_up)
           setBattleLog(prev => [...prev, `🎉 ${activePlayerCreature.name} leveled up to ${newLevelValue}!`])
           
           // Update active creature level and XP
@@ -742,6 +773,9 @@ function Battle({
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      // Play badge earned sound
+      audioManager.playSound('badge_earned', soundEffects.badge_earned)
 
       // Save/update gym progress
       const { error } = await supabase
@@ -946,7 +980,10 @@ function Battle({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Gain SP Button */}
           <button
-            onClick={handleGainSP}
+            onClick={() => {
+              audioManager.playSound('button_click', soundEffects.button_click)
+              handleGainSP()
+            }}
             disabled={!isPlayerTurn || playerHP <= 0 || wildHP <= 0}
             className="bg-gradient-to-b from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-amber-950 disabled:border-stone-950 transition-all shadow-xl"
           >
@@ -956,7 +993,10 @@ function Battle({
 
           {/* Use Skills Button */}
           <button
-            onClick={() => setShowSkillMenu(true)}
+            onClick={() => {
+              audioManager.playSound('menu_open', soundEffects.menu_open)
+              setShowSkillMenu(true)
+            }}
             disabled={!isPlayerTurn || playerHP <= 0 || wildHP <= 0 || playerSkills.length === 0}
             className="bg-gradient-to-b from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-blue-950 disabled:border-stone-950 transition-all shadow-xl"
           >
@@ -967,7 +1007,10 @@ function Battle({
           {/* Switch */}
           {canSwitch && (
             <button
-              onClick={() => setShowSwitchMenu(true)}
+              onClick={() => {
+                audioManager.playSound('menu_open', soundEffects.menu_open)
+                setShowSwitchMenu(true)
+              }}
               disabled={!isPlayerTurn || playerHP <= 0}
               className="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-purple-950 disabled:border-stone-950 transition-all shadow-xl"
             >
@@ -990,7 +1033,10 @@ function Battle({
 
           {/* Flee */}
           <button
-            onClick={handleFlee}
+            onClick={() => {
+              audioManager.playSound('flee_battle', soundEffects.flee_battle)
+              handleFlee()
+            }}
             disabled={!isPlayerTurn || playerHP <= 0}
             className="bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-red-950 disabled:border-stone-950 transition-all shadow-xl"
           >

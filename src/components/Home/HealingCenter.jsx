@@ -3,6 +3,8 @@ import { supabase } from '../../utils/supabase'
 import { generateQuestionsWithClaude } from '../../utils/aiService'
 import heartIcon from '../../assets/icons/heart.png'
 import CreatureSprite from '../Shared/CreatureSprite'
+import { audioManager } from '../../utils/audioManager'
+import { soundEffects } from '../../data/soundEffects'
 
 function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
   const [selectedCreature, setSelectedCreature] = useState(null)
@@ -58,6 +60,9 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
       setShowResult(true)
 
       if (correct) {
+        // Play healing sound
+        audioManager.playSound('creature_heal', soundEffects.creature_heal)
+        
         // Heal the creature
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
@@ -77,6 +82,9 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
           setQuestion(null)
           setShowResult(false)
         }, 2000)
+      } else {
+        // Play wrong answer sound
+        audioManager.playSound('wrong_answer', soundEffects.wrong_answer)
       }
     } catch (error) {
       console.error('Error checking answer:', error)

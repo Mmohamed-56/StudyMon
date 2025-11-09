@@ -11,6 +11,8 @@ import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
 import AudioControls from '../Shared/AudioControls'
+import { audioManager } from '../../utils/audioManager'
+import { soundEffects } from '../../data/soundEffects'
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('home')
@@ -137,7 +139,10 @@ function Dashboard() {
               {['home', 'battle', 'map', 'party', 'collection', 'settings'].map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    audioManager.playSound('tab_switch', soundEffects.tab_switch)
+                    setActiveTab(tab)
+                  }}
                   className={`px-5 py-2 capitalize transition-all font-bold shadow-lg relative ${
                     activeTab === tab 
                       ? 'bg-gradient-to-b from-amber-600 to-amber-800 text-amber-50 border-4 border-double border-amber-950 rounded-full shadow-inner' 
