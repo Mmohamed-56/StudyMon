@@ -59,6 +59,9 @@ For each gym provide:
 2. A specific badge name related to the subtopic (like "Mechanics Badge" or "Grammar Badge")
 3. A single emoji badge icon
 4. A brief focus area (what this gym specializes in)
+5. An intro voice line (what the gym leader says when you enter, 1-2 sentences, in character)
+6. A victory line (what they say when you beat them, 1 sentence)
+7. A defeat line (what they say when you lose, 1 sentence, encouraging)
 
 Difficulty tiers:
 - Gyms 1-2: Easy (introductory, basic concepts)
@@ -77,7 +80,11 @@ Return ONLY valid JSON in this exact format:
       "badgeName": "Mechanics Badge",
       "badgeEmoji": "⚙️",
       "difficultyTier": "easy",
-      "focusArea": "Newton's laws of motion and basic kinematics"
+      "focusArea": "Newton's laws of motion and basic kinematics",
+      "voiceId": "pNInz6obpgDQGcFmaJgB",
+      "introLine": "Welcome, young scholar! I am Professor Newton, master of mechanics. Show me you understand the fundamental laws of motion!",
+      "victoryLine": "Excellent work! You have proven your understanding of the fundamentals.",
+      "defeatLine": "Don't give up! Study the basics and return when you're ready."
     },
     {
       "gymNumber": 2,
@@ -85,7 +92,11 @@ Return ONLY valid JSON in this exact format:
       "badgeName": "Elasticity Badge",
       "badgeEmoji": "🔧",
       "difficultyTier": "easy",
-      "focusArea": "Springs, elastic forces, and Hooke's law"
+      "focusArea": "Springs, elastic forces, and Hooke's law",
+      "voiceId": "pNInz6obpgDQGcFmaJgB",
+      "introLine": "Ah, a challenger! I specialize in elasticity and springs. Let's see if you can handle the tension!",
+      "victoryLine": "You've mastered the elastic forces! Well done!",
+      "defeatLine": "Springs can be tricky. Review the material and bounce back!"
     },
     ... 6 more gyms
   ]

@@ -84,6 +84,10 @@ function GymSeriesCreator({ onBack, onCreated }) {
         badge_emoji: gym.badgeEmoji,
         difficulty_tier: gym.difficultyTier,
         focus_area: gym.focusArea,
+        voice_id: gym.voiceId || 'pNInz6obpgDQGcFmaJgB', // ElevenLabs voice ID
+        intro_line: gym.introLine || `Welcome to my gym!`,
+        victory_line: gym.victoryLine || `You defeated me!`,
+        defeat_line: gym.defeatLine || `Better luck next time!`,
         questions: gym.questions || [],
         gym_creatures: gym.creatures || []
       }))

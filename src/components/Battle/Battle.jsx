@@ -14,6 +14,7 @@ import catchIcon from '../../assets/icons/catch.png'
 import thinking from '../../assets/icons/thinking.png'
 import flee from '../../assets/icons/flee.png'
 import CreatureSprite from '../Shared/CreatureSprite'
+import { audioManager } from '../../utils/audioManager'
 
 function Battle({ 
   playerTeam, 
@@ -195,6 +196,13 @@ function Battle({
       setPlayerSP(currentSP)
       setWildHP(wild.maxHP)
       setLoading(false)
+
+      // Play gym leader intro voice (only for first creature)
+      if (mode === 'gym' && gymCreatureIndex === 0 && gymData.gym.intro_line) {
+        setTimeout(() => {
+          audioManager.playVoice(gymData.gym.intro_line, gymData.gym.voice_id)
+        }, 500)
+      }
     }
   }
 
@@ -390,6 +398,14 @@ function Battle({
         } else if (mode === 'gym' && gymCreatureIndex === 2) {
           // All 3 gym creatures defeated - Victory!
           setBattleLog(prev => [...prev, `You defeated ${gymData.gym.gym_leader_name}! You win the ${gymData.gym.badge_name}!`])
+          
+          // Play victory voice line
+          if (gymData.gym.victory_line) {
+            setTimeout(() => {
+              audioManager.playVoice(gymData.gym.victory_line, gymData.gym.voice_id)
+            }, 1000)
+          }
+          
           await handleGymVictory()
         } else {
           // Wild mode - normal win
@@ -473,9 +489,17 @@ function Battle({
         setShowSwitchMenu(true)
       } else {
         setBattleLog(prev => [...prev, 'All your creatures fainted! You lost!'])
+        
+        // Play defeat voice line in gym mode
+        if (mode === 'gym' && gymData?.gym?.defeat_line) {
+          setTimeout(() => {
+            audioManager.playVoice(gymData.gym.defeat_line, gymData.gym.voice_id)
+          }, 500)
+        }
+        
         setTimeout(() => {
           onExit()
-        }, 2000)
+        }, 3000)
       }
     } catch (error) {
       console.error('Error checking party:', error)
