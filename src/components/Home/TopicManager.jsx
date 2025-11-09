@@ -477,6 +477,7 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
                   <p className="text-amber-100 font-bold text-2xl">{currentTopic.documents.length}</p>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Subtopic Focus Selector */}
