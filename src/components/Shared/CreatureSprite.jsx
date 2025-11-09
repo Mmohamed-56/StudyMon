@@ -1,21 +1,31 @@
 // Import all StudyMon sprites
-import flameling from '../../assets/studymons/flameling.png'
-import leaflet from '../../assets/studymons/leaflet.png'
-import zapling from '../../assets/studymons/zapling.png'
-import frostbite from '../../assets/studymons/frostbite.png'
+import aquatot from '../../assets/studymons/aquatot.png'
 import boulder from '../../assets/studymons/boulder.png'
-import psycat from '../../assets/studymons/psycat.png'
+import dragling from '../../assets/studymons/dragling.png'
+import flameling from '../../assets/studymons/flameling.png'
+import frostbite from '../../assets/studymons/frostbite.png'
+import ironclad from '../../assets/studymons/ironclad.png'
+import leaflet from '../../assets/studymons/leaflet.png'
 import phantom from '../../assets/studymons/phantom.png'
+import psycat from '../../assets/studymons/psycat.png'
+import shadowpup from '../../assets/studymons/shadowpup.png'
+import sparkwing from '../../assets/studymons/sparkwing.png'
+import zapling from '../../assets/studymons/zapling.png'
 
 // Map creature names to their sprites
 const spriteMap = {
-  flameling,
-  leaflet,
-  zapling,
-  frostbite,
+  aquatot,
   boulder,
+  dragling,
+  flameling,
+  frostbite,
+  ironclad,
+  leaflet,
+  phantom,
   psycat,
-  phantom
+  shadowpup,
+  sparkwing,
+  zapling
 }
 
 function CreatureSprite({ creatureName, emoji, className = "text-6xl", size = null }) {
