@@ -8,7 +8,6 @@ import catchIcon from '../../assets/icons/catch.png'
 import checkmark from '../../assets/icons/checkmark.png'
 import xcross from '../../assets/icons/xcross.png'
 import { audioManager } from '../../utils/audioManager'
-import { soundEffects } from '../../data/soundEffects'
 
 function QuestionModal({ 
   isOpen, 
@@ -170,14 +169,14 @@ function QuestionModal({
 
       // Play appropriate sound
       if (correct) {
-        audioManager.playSound('correct_answer', soundEffects.correct_answer)
+        audioManager.playSound('correct_answer')
         const spReward = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
         setTimeout(() => {
           onCorrectAnswer(spReward, difficulty)
           onClose()
         }, 1500)
       } else {
-        audioManager.playSound('wrong_answer', soundEffects.wrong_answer)
+        audioManager.playSound('wrong_answer')
         setTimeout(() => {
           onClose()
         }, 2000)
@@ -192,14 +191,14 @@ function QuestionModal({
 
       // Play appropriate sound
       if (correct) {
-        audioManager.playSound('correct_answer', soundEffects.correct_answer)
+        audioManager.playSound('correct_answer')
         const spReward = difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
         setTimeout(() => {
           onCorrectAnswer(spReward, difficulty)
           onClose()
         }, 1500)
       } else {
-        audioManager.playSound('wrong_answer', soundEffects.wrong_answer)
+        audioManager.playSound('wrong_answer')
         setTimeout(() => {
           onClose()
         }, 2000)
@@ -239,7 +238,7 @@ function QuestionModal({
             <div className="space-y-4">
               <button
                 onClick={() => {
-                  audioManager.playSound('button_click', soundEffects.button_click)
+                  audioManager.playSound('button_click')
                   selectDifficulty('easy')
                 }}
                 className="w-full bg-gradient-to-b from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-green-950 relative overflow-hidden group"
@@ -256,7 +255,7 @@ function QuestionModal({
 
               <button
                 onClick={() => {
-                  audioManager.playSound('button_click', soundEffects.button_click)
+                  audioManager.playSound('button_click')
                   selectDifficulty('medium')
                 }}
                 className="w-full bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-yellow-950 relative overflow-hidden group"
@@ -274,7 +273,7 @@ function QuestionModal({
 
               <button
                 onClick={() => {
-                  audioManager.playSound('button_click', soundEffects.button_click)
+                  audioManager.playSound('button_click')
                   selectDifficulty('hard')
                 }}
                 className="w-full bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-red-950 relative overflow-hidden group"

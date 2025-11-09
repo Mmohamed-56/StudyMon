@@ -192,7 +192,21 @@ function Home({ playerTeam, trainerInfo, onUpdate }) {
               {/* Quick Action Buttons */}
               <div className="grid grid-cols-2 gap-6 mt-6">
                 <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('changeTab', { detail: 'battle' }))}
+                  onClick={() => {
+                    // Check if any party member has HP > 0
+                    const hasAliveCreature = playerTeam.some(pc => {
+                      const maxHP = Math.floor(pc.creatures.base_hp + (pc.level * 2))
+                      const currentHP = pc.current_hp ?? maxHP
+                      return currentHP > 0 && pc.party_position !== null
+                    })
+                    
+                    if (!hasAliveCreature) {
+                      alert('All your party creatures have fainted! Heal them first.')
+                      return
+                    }
+                    
+                    window.dispatchEvent(new CustomEvent('changeTab', { detail: 'battle' }))
+                  }}
                   className="bg-gradient-to-b from-red-600 via-red-700 to-red-900 hover:from-red-500 hover:via-red-600 hover:to-red-800 text-amber-50 font-bold py-8 text-xl shadow-2xl border-6 border-double border-red-950 transition-all relative overflow-hidden group"
                   style={{
                     borderRadius: '2rem 2rem 3rem 3rem',

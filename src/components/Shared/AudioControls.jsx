@@ -140,6 +140,19 @@ function AudioControls() {
                 />
               </div>
 
+              {/* Clear Sound Cache */}
+              <button
+                onClick={() => {
+                  if (confirm('Clear all cached sounds? They will regenerate on next use.')) {
+                    audioManager.clearSoundCache()
+                    alert('Sound cache cleared! Sounds will regenerate with new variations.')
+                  }
+                }}
+                className="w-full bg-gradient-to-b from-orange-700 to-orange-800 hover:from-orange-600 hover:to-orange-700 py-3 rounded-2xl font-bold text-amber-50 border-4 border-double border-orange-950 shadow-xl transition-all"
+              >
+                🔄 Regenerate Sounds
+              </button>
+
               {/* Quick Mute All */}
               <button
                 onClick={() => {

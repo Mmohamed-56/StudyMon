@@ -95,67 +95,59 @@ class AudioManager {
   // Sound effect cache
   soundCache = {}
 
-  // Play sound effect
-  async playSound(soundName, description) {
+  // Play sound effect (from static MP3 files)
+  playSound(soundName) {
     if (!this.soundEffectsEnabled) return
 
     try {
-      // Check cache first
-      if (this.soundCache[soundName]) {
-        const audio = new Audio(this.soundCache[soundName])
-        audio.volume = this.volume
-        audio.play().catch(e => console.log('Sound play blocked:', e))
-        return
-      }
-
-      // For localhost, just log
-      if (window.location.hostname === 'localhost') {
-        console.log('🔔 Sound effect (dev mode):', soundName)
-        return
-      }
-
-      // Generate sound with ElevenLabs
-      console.log('🔔 Generating sound:', soundName)
-      const response = await fetch('/.netlify/functions/generate-sound', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text: description,
-          duration: 1.0
-        })
+      // Play from static files
+      const soundPath = `/sounds/${soundName}.mp3`
+      const audio = new Audio(soundPath)
+      audio.volume = this.volume
+      audio.play().catch(e => {
+        console.log('Sound play blocked or file not found:', soundName, e)
       })
-
-      if (!response.ok) {
-        throw new Error(`Sound generation failed: ${response.status}`)
-      }
-
-      const { audio, mimeType } = await response.json()
-
-      // Convert and cache
-      const audioBlob = this.base64ToBlob(audio, mimeType)
-      const audioUrl = URL.createObjectURL(audioBlob)
-      this.soundCache[soundName] = audioUrl
-
-      // Play
-      const audioElement = new Audio(audioUrl)
-      audioElement.volume = this.volume
-      audioElement.play().catch(e => console.log('Sound play blocked:', e))
-
     } catch (error) {
       console.error('Error playing sound:', error)
     }
   }
 
-  // Play background music
-  playMusic(musicUrl) {
+  // Play background music from shared pool
+  async playBattleMusic(battleType = 'wild') {
     if (!this.musicEnabled) return
 
-    this.stopMusic()
+    try {
+      this.stopMusic()
 
-    this.currentMusic = new Audio(musicUrl)
-    this.currentMusic.loop = true
-    this.currentMusic.volume = this.volume * 0.6 // Music is quieter
-    this.currentMusic.play().catch(e => console.error('Music play error:', e))
+      // Check if we're on localhost
+      if (window.location.hostname === 'localhost') {
+        console.log('🎵 Music (dev mode):', battleType)
+        return
+      }
+
+      // Fetch random music from pool or generate new one
+      const response = await fetch('/.netlify/functions/get-battle-music', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ battleType })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Music fetch failed: ${response.status}`)
+      }
+
+      const { musicUrl } = await response.json()
+
+      if (musicUrl) {
+        this.currentMusic = new Audio(musicUrl)
+        this.currentMusic.loop = true
+        this.currentMusic.volume = this.volume * 0.4 // Music quieter for studying
+        this.currentMusic.play().catch(e => console.log('Music play blocked:', e))
+        console.log('🎵 Playing battle music')
+      }
+    } catch (error) {
+      console.error('Error playing music:', error)
+    }
   }
 
   stopMusic() {
@@ -174,6 +166,30 @@ class AudioManager {
     }
     const byteArray = new Uint8Array(byteNumbers)
     return new Blob([byteArray], { type: mimeType })
+  }
+
+  // Cache management
+  clearSoundCache(soundName = null) {
+    if (soundName) {
+      // Clear specific sound
+      if (this.soundCache[soundName]) {
+        URL.revokeObjectURL(this.soundCache[soundName])
+        delete this.soundCache[soundName]
+        console.log(`🗑️ Cleared cache for: ${soundName}`)
+      }
+    } else {
+      // Clear all sounds
+      Object.keys(this.soundCache).forEach(key => {
+        URL.revokeObjectURL(this.soundCache[key])
+      })
+      this.soundCache = {}
+      console.log('🗑️ Cleared all sound cache')
+    }
+  }
+
+  // Get list of cached sounds
+  getCachedSounds() {
+    return Object.keys(this.soundCache)
   }
 
   // Toggle functions

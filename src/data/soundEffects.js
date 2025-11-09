@@ -1,38 +1,32 @@
 // Sound effect descriptions for ElevenLabs generation
 export const soundEffects = {
-  // UI Sounds
-  button_click: 'soft click button press',
-  menu_open: 'whoosh menu opening',
-  menu_close: 'soft menu closing',
-  tab_switch: 'gentle tab switch',
+  // UI Sounds (Essential)
+  button_click: 'gentle soft button click',
+  tab_switch: 'smooth page turn',
   
-  // Battle Sounds
-  attack_hit: 'impact hit punch',
-  attack_miss: 'whoosh miss',
-  critical_hit: 'powerful critical strike',
-  super_effective: 'strong super effective hit',
-  not_effective: 'weak ineffective hit',
+  // Battle Sounds (Essential)
+  attack_hit: 'swift combat strike impact',
+  super_effective: 'powerful critical energy blast',
+  not_effective: 'weak deflected hit',
   
   // Creature Sounds
-  creature_switch: 'pokeball recall',
-  creature_faint: 'defeated faint',
-  creature_heal: 'healing restoration sparkle',
-  level_up: 'level up success fanfare',
+  creature_switch: 'quick magical teleport',
+  creature_faint: 'gentle collapse defeat',
+  creature_heal: 'soft magical healing chime',
+  level_up: 'cheerful level up jingle',
   
   // SP/Question Sounds
-  correct_answer: 'success ding reward',
-  wrong_answer: 'error buzzer wrong',
-  sp_gain: 'energy charge power up',
+  correct_answer: 'pleasant success bell ding',
+  wrong_answer: 'soft error buzz',
+  sp_gain: 'gentle energy sparkle charge',
   
-  // Special Events
-  badge_earned: 'victory fanfare celebration',
-  gym_victory: 'triumphant victory',
-  catch_success: 'pokeball capture success',
-  catch_fail: 'pokeball escape failure',
+  // Victory Sounds
+  badge_earned: 'triumphant badge fanfare',
+  gym_victory: 'heroic victory theme',
+  catch_success: 'cheerful capture success',
   
-  // Status Sounds
-  hp_low: 'warning beep alarm',
-  hp_critical: 'urgent critical warning',
-  flee_battle: 'escape running away'
+  // Battle Music Descriptions
+  battle_music_wild: 'calm upbeat study music with soft melody',
+  battle_music_gym: 'focused determination study music with gentle rhythm'
 }
 
