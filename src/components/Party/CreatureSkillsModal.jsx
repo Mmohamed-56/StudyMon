@@ -139,12 +139,12 @@ function CreatureSkillsModal({ creature, onClose, onUpdate }) {
   const maxHP = Math.floor(creature.creatures.base_hp + (creature.level * 2))
   const currentHP = creature.current_hp ?? maxHP
 
-  // Radial positions for 4 skills
+  // Radial positions for 4 skills (spread further from center)
   const positions = [
-    { top: '10%', left: '50%', transform: 'translateX(-50%)' }, // Top
-    { top: '50%', right: '10%', transform: 'translateY(-50%)' }, // Right
-    { bottom: '10%', left: '50%', transform: 'translateX(-50%)' }, // Bottom
-    { top: '50%', left: '10%', transform: 'translateY(-50%)' } // Left
+    { top: '5%', left: '50%', transform: 'translateX(-50%)' }, // Top
+    { top: '50%', right: '5%', transform: 'translateY(-50%)' }, // Right
+    { bottom: '5%', left: '50%', transform: 'translateX(-50%)' }, // Bottom
+    { top: '50%', left: '5%', transform: 'translateY(-50%)' } // Left
   ]
 
   return (
@@ -181,17 +181,17 @@ function CreatureSkillsModal({ creature, onClose, onUpdate }) {
                 <h3 className="text-2xl font-bold text-amber-50 mb-6 text-center drop-shadow-lg">
                   Active Skills ({equippedSkills.filter(s => s).length}/4)
                 </h3>
-                <div className="relative h-80 bg-gradient-to-br from-stone-900 to-stone-950 rounded-3xl border-8 border-double border-purple-950 shadow-inner overflow-hidden">
+                <div className="relative h-96 bg-gradient-to-br from-stone-900 to-stone-950 rounded-3xl border-8 border-double border-purple-950 shadow-inner overflow-visible">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.2),transparent)]"></div>
                   
                   {/* Center Creature Icon */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <div className="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-full p-6 border-4 border-purple-950 shadow-2xl">
+                    <div className="bg-gradient-to-br from-purple-700 to-indigo-800 rounded-full p-4 border-4 border-purple-950 shadow-2xl">
                       <CreatureSprite 
                         creatureName={creature.creatures.name}
                         emoji={creature.creatures.sprite}
-                        className="text-5xl"
-                        size="w-16 h-16"
+                        className="text-4xl"
+                        size="w-12 h-12"
                       />
                     </div>
                   </div>
@@ -209,9 +209,9 @@ function CreatureSkillsModal({ creature, onClose, onUpdate }) {
                         {skill ? (
                           <button
                             onClick={() => handleUnequipSkill(index)}
-                            className="bg-gradient-to-br from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 rounded-2xl p-4 border-4 border-double border-blue-950 shadow-xl transition-all w-40 group"
+                            className="bg-gradient-to-br from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 rounded-2xl p-4 border-4 border-double border-blue-950 shadow-xl transition-all w-44 group"
                           >
-                            <p className="text-amber-50 font-bold text-sm mb-1">{skill.name}</p>
+                            <p className="text-amber-50 font-bold text-base mb-1">{skill.name}</p>
                             <p className="text-xs text-blue-200">Power: {skill.base_power}</p>
                             <p className="text-xs text-yellow-200">SP: {skill.sp_cost}</p>
                             <p className="text-xs text-red-300 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to unequip</p>
@@ -219,7 +219,7 @@ function CreatureSkillsModal({ creature, onClose, onUpdate }) {
                         ) : (
                           <button
                             onClick={() => setSelectedSlot(index)}
-                            className="bg-gradient-to-br from-stone-700 to-stone-800 hover:from-stone-600 hover:to-stone-700 rounded-2xl p-4 border-4 border-dashed border-stone-600 shadow-xl transition-all w-40"
+                            className="bg-gradient-to-br from-stone-700 to-stone-800 hover:from-stone-600 hover:to-stone-700 rounded-2xl p-4 border-4 border-dashed border-stone-600 shadow-xl transition-all w-44"
                           >
                             <p className="text-stone-400 font-bold text-lg">Empty</p>
                             <p className="text-xs text-stone-500 mt-1">Click to equip</p>
