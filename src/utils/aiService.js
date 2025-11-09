@@ -100,16 +100,54 @@ export const generateQuestion = async (topic, difficulty = 'medium') => {
 
 // Claude API Integration via Netlify Backend
 export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) => {
+  // Always use mock questions for now (most reliable)
+  console.log(`Generating ${count} ${difficulty} question(s) for ${topic}`)
+  
+  try {
+    const questions = []
+    for (let i = 0; i < count; i++) {
+      const q = await generateQuestion(topic, difficulty)
+      if (q && q.question) {
+        questions.push(q)
+      }
+    }
+    
+    // Ensure we have at least one question
+    if (questions.length === 0) {
+      questions.push({
+        question: 'What is 2 + 2?',
+        answer: '4',
+        difficulty: difficulty
+      })
+    }
+    
+    console.log('Generated questions:', questions)
+    return questions
+  } catch (error) {
+    console.error('Error generating questions:', error)
+    // Always return at least one question
+    return [{
+      question: 'What is 2 + 2?',
+      answer: '4',
+      difficulty: difficulty
+    }]
+  }
+
+  /* NETLIFY BACKEND (Disabled for now - enable when deployed properly)
+  
   // Check if running on localhost or production
   const isDev = window.location.hostname === 'localhost'
   
-  // In development, use mock questions (Netlify functions don't run locally by default)
   if (isDev) {
-    console.log(`[DEV MODE] Using mock questions for ${topic}`)
-    return Array(count).fill(null).map(() => generateQuestion(topic, difficulty))
+    // Development: Use mock questions
+    const questions = []
+    for (let i = 0; i < count; i++) {
+      questions.push(await generateQuestion(topic, difficulty))
+    }
+    return questions
   }
 
-  // In production, call Netlify function
+  // Production: Call Netlify function
   try {
     const response = await fetch('/.netlify/functions/generate-questions', {
       method: 'POST',
@@ -132,8 +170,12 @@ export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) 
   } catch (error) {
     console.error('Error calling backend API:', error)
     // Fallback to mock questions
-    console.log('Falling back to mock questions')
-    return Array(count).fill(null).map(() => generateQuestion(topic, difficulty))
+    const questions = []
+    for (let i = 0; i < count; i++) {
+      questions.push(await generateQuestion(topic, difficulty))
+    }
+    return questions
   }
+  */
 }
 

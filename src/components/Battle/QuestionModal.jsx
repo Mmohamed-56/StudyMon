@@ -30,9 +30,11 @@ function QuestionModal({
   const selectDifficulty = async (diff) => {
     setDifficulty(diff)
     setLoading(true)
+    setQuestion(null) // Clear previous question
 
     try {
-      // Try to get question from current topic if available
+      console.log('Generating question:', { topic: currentTopic?.topic_name, difficulty: diff })
+      
       let generatedQuestion = null
 
       if (currentTopic) {
@@ -42,7 +44,8 @@ function QuestionModal({
           diff, 
           1
         )
-        generatedQuestion = questions[0]
+        console.log('Got questions from AI:', questions)
+        generatedQuestion = questions && questions.length > 0 ? questions[0] : null
       } else {
         // Fallback to database questions
         const { data, error } = await supabase
@@ -53,24 +56,27 @@ function QuestionModal({
           .order('created_at', { ascending: false })
 
         if (error) {
-          console.error('Error fetching question:', error)
+          console.error('Error fetching question from DB:', error)
         } else if (data && data.length > 0) {
           generatedQuestion = data[Math.floor(Math.random() * data.length)]
+          console.log('Got question from DB:', generatedQuestion)
         }
       }
 
-      if (generatedQuestion) {
-        setQuestion(generatedQuestion)
-      } else {
-        // Ultimate fallback
-        setQuestion({
+      // Ensure we have a valid question
+      if (!generatedQuestion || !generatedQuestion.question) {
+        console.warn('No question generated, using fallback')
+        generatedQuestion = {
           question: 'What is 2 + 2?',
           answer: '4',
           difficulty: diff
-        })
+        }
       }
+
+      console.log('Setting question:', generatedQuestion)
+      setQuestion(generatedQuestion)
     } catch (error) {
-      console.error('Error generating question:', error)
+      console.error('Error in selectDifficulty:', error)
       // Fallback question
       setQuestion({
         question: 'What is 2 + 2?',
