@@ -43,10 +43,10 @@ export const handler = async (event, context) => {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-12-15'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 200,
         messages: [{
           role: 'user',
