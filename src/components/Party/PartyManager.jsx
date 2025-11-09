@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
+import XPBar from '../Shared/XPBar'
 
 function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
   const [dragging, setDragging] = useState(null)
@@ -215,6 +216,11 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                           {currentSP}/{maxSP} SP
                         </p>
                       </div>
+
+                      {/* XP Bar */}
+                      <div className="mt-2">
+                        <XPBar currentXP={creature.current_xp || 0} level={creature.level} />
+                      </div>
                     </div>
                   </div>
                 )
@@ -270,16 +276,18 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                       <p className="text-amber-50 font-bold drop-shadow text-sm">{creature.creatures.name}</p>
                       <p className="text-slate-300 text-xs font-semibold">Lv. {creature.level}</p>
                       
-                      <div className="mt-3">
+                      <div className="mt-3 space-y-2">
                         <div className="w-full bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 rounded-full h-2 border border-stone-800 shadow-inner">
                           <div 
                             className="bg-gradient-to-r from-lime-400 to-green-500 h-full rounded-full shadow-lg"
                             style={{ width: `${hpPercentage}%` }}
                           />
                         </div>
-                        <p className="text-xs text-amber-100 mt-1 font-semibold drop-shadow">
+                        <p className="text-xs text-amber-100 font-semibold drop-shadow">
                           {currentHP}/{maxHP} HP
                         </p>
+                        
+                        <XPBar currentXP={creature.current_xp || 0} level={creature.level} />
                       </div>
 
                       <div className="mt-2 text-xs text-slate-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">

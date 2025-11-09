@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
 import { getTypeEffectiveness } from '../../utils/typechart'
 import QuestionModal from './QuestionModal'
+import XPBar from '../Shared/XPBar'
+import LevelUpModal from '../Shared/LevelUpModal'
 
 function Battle({ playerTeam, onExit, currentTopic }) {
   // Battle state
@@ -24,6 +26,20 @@ function Battle({ playerTeam, onExit, currentTopic }) {
   const [pendingSkill, setPendingSkill] = useState(null)
   const [showSwitchMenu, setShowSwitchMenu] = useState(false)
   const [showCatchButton, setShowCatchButton] = useState(false)
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false)
+  const [leveledUpCreature, setLeveledUpCreature] = useState(null)
+  const [newLevel, setNewLevel] = useState(0)
+  
+  // Add current_xp to creature state
+  useEffect(() => {
+    if (activePlayerCreature) {
+      // Ensure current_xp is set
+      const xp = activePlayerCreature.current_xp || 0
+      if (activePlayerCreature.current_xp === undefined) {
+        activePlayerCreature.current_xp = xp
+      }
+    }
+  }, [activePlayerCreature])
 
   useEffect(() => {
     loadBattle()
@@ -71,7 +87,8 @@ function Battle({ playerTeam, onExit, currentTopic }) {
       const player = calculateStats({
         ...activeCreature.creatures,
         level: activeCreature.level,
-        userCreatureId: activeCreature.id
+        userCreatureId: activeCreature.id,
+        current_xp: activeCreature.current_xp || 0
       })
       
       const maxHP = Math.floor(activeCreature.creatures.base_hp + (activeCreature.level * 2))
@@ -454,20 +471,34 @@ function Battle({ playerTeam, onExit, currentTopic }) {
       const maxHP = Math.floor(activePlayerCreature.base_hp + (activePlayerCreature.level * 2))
       const hpToSave = Math.max(0, Math.min(playerHP, maxHP))
 
+      // Calculate XP gain if won
+      let xpGain = 0
+      if (won && !justSave) {
+        // XP = opponent level * 10
+        xpGain = wildCreature.level * 10
+        setBattleLog(prev => [...prev, `${activePlayerCreature.name} gained ${xpGain} XP!`])
+      }
+
       const { data, error } = await supabase
         .from('user_creatures')
         .update({ 
           current_hp: hpToSave,
-          current_sp: playerSP
+          current_sp: playerSP,
+          current_xp: activePlayerCreature.current_xp + xpGain
         })
         .eq('id', activePlayerCreature.userCreatureId)
         .eq('user_id', user.id)
         .select()
 
       if (error) {
-        console.error('Error saving HP/SP:', error)
+        console.error('Error saving HP/SP/XP:', error)
       } else {
         console.log('Saved successfully:', data)
+        
+        // Check for level up
+        if (won && xpGain > 0 && data && data.length > 0) {
+          await checkLevelUp(data[0])
+        }
       }
 
       // If won, increment battles_won
@@ -476,6 +507,80 @@ function Battle({ playerTeam, onExit, currentTopic }) {
       }
     } catch (error) {
       console.error('Error saving battle results:', error)
+    }
+  }
+
+  const checkLevelUp = async (creatureData) => {
+    const currentLevel = creatureData.level
+    const currentXP = creatureData.current_xp
+    const xpNeeded = currentLevel * 50
+
+    if (currentXP >= xpNeeded) {
+      // Level up!
+      const newLevelValue = currentLevel + 1
+      const remainingXP = currentXP - xpNeeded
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { error } = await supabase
+          .from('user_creatures')
+          .update({ 
+            level: newLevelValue,
+            current_xp: remainingXP
+          })
+          .eq('id', creatureData.id)
+          .eq('user_id', user.id)
+
+        if (!error) {
+          setBattleLog(prev => [...prev, `🎉 ${activePlayerCreature.name} leveled up to ${newLevelValue}!`])
+          
+          // Update active creature level and XP
+          setActivePlayerCreature(prev => ({
+            ...prev,
+            level: newLevelValue,
+            current_xp: remainingXP
+          }))
+
+          // Check if this level allows learning a new skill
+          const canLearnSkill = 
+            (newLevelValue % 2 === 0) ||  // Level 1 skills every 2 levels
+            (newLevelValue % 5 === 0) ||  // Level 2 skills every 5 levels
+            (newLevelValue % 10 === 0) || // Level 3 skills every 10 levels
+            (newLevelValue % 15 === 0)    // Level 4 skills every 15 levels
+
+          if (canLearnSkill) {
+            // Show level up modal
+            setLeveledUpCreature({
+              ...creatureData,
+              id: activePlayerCreature.userCreatureId,
+              creatures: {
+                id: activePlayerCreature.id,
+                name: activePlayerCreature.name,
+                type: activePlayerCreature.type,
+                sprite: activePlayerCreature.sprite
+              }
+            })
+            setNewLevel(newLevelValue)
+            setShowLevelUpModal(true)
+          }
+        }
+      } catch (error) {
+        console.error('Error leveling up:', error)
+      }
+    }
+  }
+
+  const handleSkillLearned = async () => {
+    // Reload player skills after learning a new one
+    if (activePlayerCreature) {
+      const party = playerTeam
+        .filter(c => c.party_position !== null)
+        .sort((a, b) => a.party_position - b.party_position)
+      
+      const activeCreature = party[0]
+      await loadPlayerSkills(activeCreature)
     }
   }
 
@@ -556,13 +661,20 @@ function Battle({ playerTeam, onExit, currentTopic }) {
                 <p className="text-xs text-amber-100 mb-3 font-semibold">{playerHP}/{activePlayerCreature.maxHP} HP</p>
                 
                 {/* SP Bar */}
-                <div className="w-48 bg-stone-950 rounded-full h-3 border-2 border-stone-900 shadow-inner">
+                <div className="w-48 bg-stone-950 rounded-full h-3 mb-2 border-2 border-stone-900 shadow-inner">
                   <div 
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300"
                     style={{ width: `${(playerSP / (activePlayerCreature.max_sp || 50)) * 100}%` }}
                   />
                 </div>
-                <p className="text-xs text-blue-200 mt-1 font-semibold">{playerSP}/{activePlayerCreature.max_sp || 50} SP</p>
+                <p className="text-xs text-blue-200 mb-3 font-semibold">{playerSP}/{activePlayerCreature.max_sp || 50} SP</p>
+                
+                {/* XP Bar */}
+                <XPBar 
+                  currentXP={activePlayerCreature.current_xp || 0} 
+                  level={activePlayerCreature.level} 
+                  className="w-48"
+                />
               </div>
             </div>
           </div>
@@ -745,6 +857,16 @@ function Battle({ playerTeam, onExit, currentTopic }) {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Level Up Modal */}
+      {showLevelUpModal && leveledUpCreature && (
+        <LevelUpModal
+          creature={leveledUpCreature}
+          newLevel={newLevel}
+          onClose={() => setShowLevelUpModal(false)}
+          onSkillLearned={handleSkillLearned}
+        />
       )}
     </div>
   )

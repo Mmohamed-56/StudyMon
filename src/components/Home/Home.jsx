@@ -4,6 +4,7 @@ import StudyTimer from './StudyTimer'
 import WeeklyPlanner from './WeeklyPlanner'
 import TopicManager from './TopicManager'
 import HealingCenter from './HealingCenter'
+import XPBar from '../Shared/XPBar'
 import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
@@ -151,16 +152,18 @@ function Home({ playerTeam, trainerInfo, onUpdate }) {
                         <div className="text-5xl mb-2 drop-shadow-lg">{pc.creatures.sprite}</div>
                         <p className="text-amber-50 font-bold drop-shadow">{pc.creatures.name}</p>
                         <p className="text-green-200 text-sm font-semibold">Lv. {pc.level}</p>
-                        <div className="mt-3">
+                        <div className="mt-3 space-y-2">
                           <div className="w-full bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 rounded-full h-3 border-2 border-stone-800 shadow-inner">
                             <div 
                               className="bg-gradient-to-r from-lime-400 to-green-500 h-full rounded-full shadow-lg"
                               style={{ width: `${hpPercentage}%` }}
                             />
                           </div>
-                          <p className="text-xs text-amber-100 mt-1 font-semibold drop-shadow">
+                          <p className="text-xs text-amber-100 font-semibold drop-shadow">
                             {currentHP}/{maxHP} HP
                           </p>
+                          
+                          <XPBar currentXP={pc.current_xp || 0} level={pc.level} />
                         </div>
                       </div>
                     </div>
