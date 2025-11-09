@@ -459,20 +459,23 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-900 to-blue-900 flex items-center justify-center">
-        <p className="text-white text-xl">Loading battle...</p>
+      <div className="min-h-screen bg-gradient-to-b from-stone-800 via-stone-900 to-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">⚔️</div>
+          <p className="text-amber-50 text-2xl font-bold">Loading battle...</p>
+        </div>
       </div>
     )
   }
 
   if (!activePlayerCreature || !wildCreature) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-900 to-blue-900 flex items-center justify-center p-4">
-        <div className="bg-white/90 rounded-lg p-8 text-center">
-          <p className="text-xl mb-4">{battleLog[0] || 'Unable to start battle'}</p>
+      <div className="min-h-screen bg-gradient-to-b from-stone-800 via-stone-900 to-zinc-950 flex items-center justify-center p-4">
+        <div className="bg-gradient-to-br from-stone-700 to-stone-800 rounded-3xl p-8 text-center shadow-2xl border-8 border-double border-stone-950">
+          <p className="text-xl mb-6 text-amber-50 font-bold">{battleLog[0] || 'Unable to start battle'}</p>
           <button
             onClick={onExit}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg"
+            className="bg-gradient-to-b from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 text-amber-50 font-bold py-3 px-8 rounded-2xl border-4 border-double border-blue-950 shadow-xl"
           >
             Back to Hub
           </button>
