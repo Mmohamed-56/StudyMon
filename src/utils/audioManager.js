@@ -8,6 +8,31 @@ class AudioManager {
     this.musicEnabled = true
     this.voiceEnabled = true
     this.volume = 0.7
+    this.currentMusicType = null // 'background' or 'battle'
+    this.currentTrackIndex = 0
+    
+    // Background music playlist (will cycle through these)
+    this.backgroundMusicTracks = [
+      'background_music_1.mp3',
+      'background_music_2.mp3',
+      'background_music_3.mp3',
+      'background_music_4.mp3',
+      'background_music_5.mp3'
+    ]
+    
+    // Battle music playlists
+    this.battleMusicTracks = {
+      wild: [
+        'battle_music_wild_1.mp3',
+        'battle_music_wild_2.mp3',
+        'battle_music_wild_3.mp3'
+      ],
+      gym: [
+        'battle_music_gym_1.mp3',
+        'battle_music_gym_2.mp3',
+        'battle_music_gym_3.mp3'
+      ]
+    }
     
     // Load preferences from localStorage
     this.loadPreferences()
@@ -112,39 +137,147 @@ class AudioManager {
     }
   }
 
-  // Play background music from shared pool
-  async playBattleMusic(battleType = 'wild') {
+  // Play background music (normal gameplay) - cycles through multiple tracks
+  async playBackgroundMusic(shuffle = true) {
     if (!this.musicEnabled) return
 
     try {
       this.stopMusic()
+      this.currentMusicType = 'background'
 
-      // Check if we're on localhost
-      if (window.location.hostname === 'localhost') {
-        console.log('🎵 Music (dev mode):', battleType)
-        return
+      // Select track (random or sequential)
+      if (shuffle) {
+        this.currentTrackIndex = Math.floor(Math.random() * this.backgroundMusicTracks.length)
       }
 
-      // Fetch random music from pool or generate new one
-      const response = await fetch('/.netlify/functions/get-battle-music', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ battleType })
-      })
+      const playTrack = async (trackIndex) => {
+        const trackName = this.backgroundMusicTracks[trackIndex]
+        const musicPath = `/sounds/${trackName}`
+        
+        this.currentMusic = new Audio(musicPath)
+        this.currentMusic.volume = this.volume * 0.3 // Quiet for studying
+        
+        // When track ends, play next track
+        this.currentMusic.onended = () => {
+          if (this.currentMusicType === 'background' && this.musicEnabled) {
+            // Move to next track (or random)
+            if (shuffle) {
+              this.currentTrackIndex = Math.floor(Math.random() * this.backgroundMusicTracks.length)
+            } else {
+              this.currentTrackIndex = (this.currentTrackIndex + 1) % this.backgroundMusicTracks.length
+            }
+            playTrack(this.currentTrackIndex)
+          }
+        }
 
-      if (!response.ok) {
-        throw new Error(`Music fetch failed: ${response.status}`)
+        // Handle errors (file not found) - try next track
+        this.currentMusic.onerror = () => {
+          console.log(`Track not found: ${trackName}, trying next...`)
+          if (this.currentMusicType === 'background' && this.musicEnabled) {
+            this.currentTrackIndex = (this.currentTrackIndex + 1) % this.backgroundMusicTracks.length
+            playTrack(this.currentTrackIndex)
+          }
+        }
+
+        await this.currentMusic.play().catch(e => {
+          console.log('Background music play blocked:', e)
+        })
+        
+        console.log(`🎵 Playing background music: ${trackName}`)
       }
 
-      const { musicUrl } = await response.json()
+      await playTrack(this.currentTrackIndex)
+    } catch (error) {
+      console.error('Error playing background music:', error)
+    }
+  }
 
-      if (musicUrl) {
-        this.currentMusic = new Audio(musicUrl)
-        this.currentMusic.loop = true
-        this.currentMusic.volume = this.volume * 0.4 // Music quieter for studying
-        this.currentMusic.play().catch(e => console.log('Music play blocked:', e))
-        console.log('🎵 Playing battle music')
+  // Play battle music from shared pool or local fallback - cycles through tracks
+  async playBattleMusic(battleType = 'wild', shuffle = true) {
+    if (!this.musicEnabled) return
+
+    try {
+      this.stopMusic()
+      this.currentMusicType = 'battle'
+      
+      const useLocal = window.location.hostname === 'localhost'
+      
+      // Try database first (production)
+      if (!useLocal) {
+        try {
+          const response = await fetch('/.netlify/functions/get-battle-music', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ battleType })
+          })
+
+          if (response.ok) {
+            const { musicUrl } = await response.json()
+
+            if (musicUrl) {
+              this.currentMusic = new Audio(musicUrl)
+              this.currentMusic.loop = true
+              this.currentMusic.volume = this.volume * 0.4
+              await this.currentMusic.play().catch(e => {
+                console.log('Database music failed to play:', e)
+                throw e // Trigger local fallback
+              })
+              console.log('🎵 Playing battle music from database')
+              return
+            }
+          }
+        } catch (dbError) {
+          console.log('Database music unavailable, using local files')
+        }
       }
+
+      // Use local playlist
+      const playlist = this.battleMusicTracks[battleType] || this.battleMusicTracks.wild
+      
+      // Select track (random or sequential)
+      if (shuffle) {
+        this.currentTrackIndex = Math.floor(Math.random() * playlist.length)
+      } else {
+        this.currentTrackIndex = 0
+      }
+
+      const playTrack = async (trackIndex) => {
+        const trackName = playlist[trackIndex]
+        const musicPath = `/sounds/${trackName}`
+        
+        this.currentMusic = new Audio(musicPath)
+        this.currentMusic.volume = this.volume * 0.4
+        
+        // When track ends, play next track in playlist
+        this.currentMusic.onended = () => {
+          if (this.currentMusicType === 'battle' && this.musicEnabled) {
+            if (shuffle) {
+              this.currentTrackIndex = Math.floor(Math.random() * playlist.length)
+            } else {
+              this.currentTrackIndex = (this.currentTrackIndex + 1) % playlist.length
+            }
+            playTrack(this.currentTrackIndex)
+          }
+        }
+
+        // Handle errors - try next track
+        this.currentMusic.onerror = () => {
+          console.log(`Battle track not found: ${trackName}, trying next...`)
+          if (this.currentMusicType === 'battle' && this.musicEnabled) {
+            this.currentTrackIndex = (this.currentTrackIndex + 1) % playlist.length
+            playTrack(this.currentTrackIndex)
+          }
+        }
+
+        await this.currentMusic.play().catch(e => {
+          console.log('Battle music play blocked:', e)
+        })
+        
+        console.log(`🎵 Playing battle music (${battleType}): ${trackName}`)
+      }
+
+      await playTrack(this.currentTrackIndex)
+      
     } catch (error) {
       console.error('Error playing music:', error)
     }
@@ -153,8 +286,63 @@ class AudioManager {
   stopMusic() {
     if (this.currentMusic) {
       this.currentMusic.pause()
+      this.currentMusic.onended = null // Clear event handlers
+      this.currentMusic.onerror = null
       this.currentMusic = null
     }
+    this.currentMusicType = null
+  }
+
+  // Music player controls
+  skipToNextTrack() {
+    if (!this.currentMusicType) return
+
+    if (this.currentMusicType === 'background') {
+      this.playBackgroundMusic(true) // Shuffle mode
+    } else if (this.currentMusicType === 'battle') {
+      // Extract battle type from current setup
+      this.playBattleMusic('wild', true)
+    }
+  }
+
+  skipToPreviousTrack() {
+    // For now, just replay current or go to random track
+    this.skipToNextTrack()
+  }
+
+  getCurrentTrackInfo() {
+    if (!this.currentMusicType || !this.currentMusic) {
+      return { name: 'No music playing', type: null, index: 0, total: 0 }
+    }
+
+    let trackName = 'Unknown'
+    let total = 0
+    
+    if (this.currentMusicType === 'background') {
+      trackName = this.backgroundMusicTracks[this.currentTrackIndex] || 'Unknown'
+      total = this.backgroundMusicTracks.length
+    } else if (this.currentMusicType === 'battle') {
+      const playlist = this.battleMusicTracks.wild // Default to wild
+      trackName = playlist[this.currentTrackIndex] || 'Unknown'
+      total = playlist.length
+    }
+
+    // Clean up the filename for display
+    const displayName = trackName
+      .replace('.mp3', '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase())
+
+    return {
+      name: displayName,
+      type: this.currentMusicType,
+      index: this.currentTrackIndex + 1,
+      total: total
+    }
+  }
+
+  isPlayingMusic() {
+    return this.currentMusic && !this.currentMusic.paused
   }
 
   // Helper: Convert base64 to blob

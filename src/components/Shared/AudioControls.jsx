@@ -7,6 +7,16 @@ function AudioControls() {
   const [music, setMusic] = useState(audioManager.musicEnabled)
   const [voice, setVoice] = useState(audioManager.voiceEnabled)
   const [volume, setVolume] = useState(audioManager.volume)
+  const [currentTrack, setCurrentTrack] = useState(audioManager.getCurrentTrackInfo())
+
+  // Update track info periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTrack(audioManager.getCurrentTrackInfo())
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleToggleSoundEffects = () => {
     audioManager.toggleSoundEffects()
@@ -27,6 +37,21 @@ function AudioControls() {
     const newVolume = parseFloat(e.target.value)
     setVolume(newVolume)
     audioManager.setVolume(newVolume)
+  }
+
+  const handleSkipNext = () => {
+    audioManager.skipToNextTrack()
+    setTimeout(() => setCurrentTrack(audioManager.getCurrentTrackInfo()), 500)
+  }
+
+  const handleSkipPrevious = () => {
+    audioManager.skipToPreviousTrack()
+    setTimeout(() => setCurrentTrack(audioManager.getCurrentTrackInfo()), 500)
+  }
+
+  const handlePlayBackground = () => {
+    audioManager.playBackgroundMusic()
+    setTimeout(() => setCurrentTrack(audioManager.getCurrentTrackInfo()), 500)
   }
 
   return (
@@ -99,6 +124,57 @@ function AudioControls() {
                   }`} />
                 </button>
               </div>
+
+              {/* Music Player Controls */}
+              {music && (
+                <div className="bg-gradient-to-br from-indigo-950 to-purple-950 rounded-2xl p-4 border-4 border-double border-indigo-900 shadow-inner space-y-3">
+                  <div className="text-center">
+                    <p className="text-xs text-indigo-300 font-semibold mb-1">NOW PLAYING</p>
+                    <p className="text-amber-100 font-bold text-sm truncate" title={currentTrack.name}>
+                      {currentTrack.name}
+                    </p>
+                    {currentTrack.type && (
+                      <p className="text-xs text-indigo-400 mt-1">
+                        Track {currentTrack.index} of {currentTrack.total} • {currentTrack.type}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Player Controls */}
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={handleSkipPrevious}
+                      disabled={!currentTrack.type}
+                      className="bg-gradient-to-b from-indigo-700 to-indigo-900 hover:from-indigo-600 hover:to-indigo-800 disabled:from-stone-800 disabled:to-stone-900 rounded-xl w-12 h-12 flex items-center justify-center border-3 border-indigo-950 shadow-lg transition-all hover:scale-110 disabled:opacity-50"
+                      title="Previous Track"
+                    >
+                      <span className="text-2xl">⏮️</span>
+                    </button>
+                    
+                    <button
+                      onClick={handlePlayBackground}
+                      disabled={!music || currentTrack.type === 'battle'}
+                      className="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 disabled:from-stone-800 disabled:to-stone-900 rounded-full w-14 h-14 flex items-center justify-center border-4 border-double border-purple-950 shadow-xl transition-all hover:scale-110 disabled:opacity-50"
+                      title="Play Background Music"
+                    >
+                      <span className="text-2xl">{audioManager.isPlayingMusic() ? '▶️' : '🎼'}</span>
+                    </button>
+
+                    <button
+                      onClick={handleSkipNext}
+                      disabled={!currentTrack.type}
+                      className="bg-gradient-to-b from-indigo-700 to-indigo-900 hover:from-indigo-600 hover:to-indigo-800 disabled:from-stone-800 disabled:to-stone-900 rounded-xl w-12 h-12 flex items-center justify-center border-3 border-indigo-950 shadow-lg transition-all hover:scale-110 disabled:opacity-50"
+                      title="Next Track (Shuffle)"
+                    >
+                      <span className="text-2xl">⏭️</span>
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-center text-indigo-300">
+                    {currentTrack.type === 'battle' ? '🎮 Battle music playing' : '🎵 Background music'}
+                  </p>
+                </div>
+              )}
 
               {/* Sound Effects Toggle */}
               <div className="flex items-center justify-between bg-gradient-to-r from-stone-900 to-stone-950 rounded-2xl p-3 border-3 border-stone-700">

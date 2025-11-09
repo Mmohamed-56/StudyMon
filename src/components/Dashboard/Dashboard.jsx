@@ -120,9 +120,9 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-stone-800">
       
-      {/* Navigation Bar */}
-      <nav className="bg-gradient-to-b from-amber-900 to-amber-950 border-b-8 border-double border-yellow-900 shadow-2xl relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-900/10 to-transparent"></div>
+      {/* Navigation Bar - Sticky at top */}
+      <nav className="sticky top-0 z-50 bg-gradient-to-b from-amber-900 to-amber-950 border-b-8 border-double border-yellow-900 shadow-2xl relative">
+<div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-900/10 to-transparent"></div>
         <div className="max-w-7xl mx-auto px-4 relative">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center">

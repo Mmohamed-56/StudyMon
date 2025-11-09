@@ -4,6 +4,7 @@ import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
 import gearIcon from '../../assets/icons/gear.png'
+import { isDevMode, enableDevMode, disableDevMode, devActions, checkDevAccount } from '../../utils/devHelper'
 
 function Settings({ trainerInfo, onUpdate }) {
   const [activeSection, setActiveSection] = useState('profile')
@@ -27,6 +28,13 @@ function Settings({ trainerInfo, onUpdate }) {
   const [selectedGlasses, setSelectedGlasses] = useState('none')
   const [selectedHat, setSelectedHat] = useState('none')
 
+  // Developer mode state
+  const [devModeEnabled, setDevModeEnabled] = useState(false)
+  const [availableCreatures, setAvailableCreatures] = useState([])
+  const [selectedCreatureId, setSelectedCreatureId] = useState('')
+  const [creatureLevel, setCreatureLevel] = useState(5)
+  const [spAmount, setSPAmount] = useState(100)
+
   // Load user email and initialize form values
   useEffect(() => {
     const loadUserData = async () => {
@@ -34,10 +42,28 @@ function Settings({ trainerInfo, onUpdate }) {
       if (user) {
         setUserEmail(user.email || '')
         setUserCreatedAt(user.created_at || '')
+        
+        // Check if dev account
+        if (checkDevAccount(user.email)) {
+          enableDevMode()
+        }
+        
+        // Update dev mode state
+        setDevModeEnabled(isDevMode())
       }
     }
 
     loadUserData()
+
+    // Load creatures list for dev panel
+    const loadCreatures = async () => {
+      const creatures = await devActions.listCreatures(supabase)
+      setAvailableCreatures(creatures || [])
+    }
+
+    if (isDevMode()) {
+      loadCreatures()
+    }
   }, [])
 
   // Initialize form values when trainerInfo changes
@@ -190,6 +216,97 @@ function Settings({ trainerInfo, onUpdate }) {
     await supabase.auth.signOut()
   }
 
+  // Developer mode actions
+  const toggleDevMode = () => {
+    if (devModeEnabled) {
+      disableDevMode()
+      setDevModeEnabled(false)
+      showMessage('success', 'Developer mode disabled')
+    } else {
+      enableDevMode()
+      setDevModeEnabled(true)
+      showMessage('success', 'Developer mode enabled!')
+      // Load creatures list
+      devActions.listCreatures(supabase).then(creatures => {
+        setAvailableCreatures(creatures || [])
+      })
+    }
+  }
+
+  const handleAddCreature = async () => {
+    if (!selectedCreatureId) {
+      showMessage('error', 'Please select a creature')
+      return
+    }
+
+    setLoading(true)
+    const success = await devActions.addCreature(supabase, parseInt(selectedCreatureId), creatureLevel)
+    setLoading(false)
+    
+    if (success) {
+      showMessage('success', `Added creature at level ${creatureLevel}!`)
+      if (onUpdate) onUpdate()
+    } else {
+      showMessage('error', 'Failed to add creature')
+    }
+  }
+
+  const handleHealAll = async () => {
+    setLoading(true)
+    const success = await devActions.healAll(supabase)
+    setLoading(false)
+    
+    if (success) {
+      showMessage('success', 'Healed all creatures!')
+      if (onUpdate) onUpdate()
+    } else {
+      showMessage('error', 'Failed to heal creatures')
+    }
+  }
+
+  const handleAddSP = async () => {
+    setLoading(true)
+    const success = await devActions.addSP(supabase, spAmount)
+    setLoading(false)
+    
+    if (success) {
+      showMessage('success', `Added ${spAmount} Study Points!`)
+      if (onUpdate) onUpdate()
+    } else {
+      showMessage('error', 'Failed to add SP')
+    }
+  }
+
+  const handleUnlockAllBadges = async () => {
+    setLoading(true)
+    const success = await devActions.unlockAllBadges(supabase)
+    setLoading(false)
+    
+    if (success) {
+      showMessage('success', 'Unlocked all badges!')
+      if (onUpdate) onUpdate()
+    } else {
+      showMessage('error', 'Failed to unlock badges')
+    }
+  }
+
+  const handleClearTeam = async () => {
+    if (!confirm('Are you sure you want to delete all creatures? This cannot be undone!')) {
+      return
+    }
+
+    setLoading(true)
+    const success = await devActions.clearTeam(supabase)
+    setLoading(false)
+    
+    if (success) {
+      showMessage('success', 'Cleared all creatures!')
+      if (onUpdate) onUpdate()
+    } else {
+      showMessage('error', 'Failed to clear team')
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Message Display */}
@@ -221,7 +338,8 @@ function Settings({ trainerInfo, onUpdate }) {
               { id: 'password', label: 'Password' },
               { id: 'email', label: 'Email' },
               { id: 'appearance', label: 'Appearance' },
-              { id: 'account', label: 'Account' }
+              { id: 'account', label: 'Account' },
+              ...(devModeEnabled ? [{ id: 'developer', label: '🔧 Developer' }] : [])
             ].map((section) => (
               <button
                 key={section.id}
@@ -527,6 +645,19 @@ function Settings({ trainerInfo, onUpdate }) {
                   }
                 </span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-amber-200 font-semibold">Developer Mode</span>
+                <button
+                  onClick={toggleDevMode}
+                  className={`px-4 py-1 rounded-full text-sm font-bold transition-all ${
+                    devModeEnabled
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                      : 'bg-stone-700 text-stone-400 hover:bg-stone-600'
+                  }`}
+                >
+                  {devModeEnabled ? 'Enabled' : 'Disabled'}
+                </button>
+              </div>
             </div>
 
             <div className="border-t-4 border-double border-stone-800 pt-6 mt-6">
@@ -537,6 +668,124 @@ function Settings({ trainerInfo, onUpdate }) {
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
                 <span className="relative drop-shadow">Sign Out</span>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Developer Section */}
+        {activeSection === 'developer' && devModeEnabled && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-purple-300 mb-4">🔧 Developer Tools</h3>
+            
+            <div className="bg-gradient-to-r from-purple-900 to-pink-900 border-3 border-purple-700 rounded-2xl p-4 mb-4">
+              <p className="text-purple-200 text-sm font-semibold">
+                ⚠️ Warning: These tools are for development and testing only. Use with caution!
+              </p>
+            </div>
+
+            {/* Add Creature */}
+            <div className="bg-stone-900 rounded-2xl p-5 border-3 border-stone-700 shadow-inner space-y-3">
+              <h4 className="text-white font-bold">Add Creature</h4>
+              <div className="space-y-2">
+                <label className="block text-white text-sm">Select Creature</label>
+                <select
+                  value={selectedCreatureId}
+                  onChange={(e) => setSelectedCreatureId(e.target.value)}
+                  className="w-full p-2 rounded-lg bg-stone-800 border-2 border-stone-600 text-amber-100 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="">Choose a creature...</option>
+                  {availableCreatures.map(c => (
+                    <option key={c.id} value={c.id}>
+                      #{c.id} - {c.name} ({c.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-white text-sm">Level (1-100)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={creatureLevel}
+                  onChange={(e) => setCreatureLevel(parseInt(e.target.value) || 1)}
+                  className="w-full p-2 rounded-lg bg-stone-800 border-2 border-stone-600 text-amber-100 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <button
+                onClick={handleAddCreature}
+                disabled={loading || !selectedCreatureId}
+                className="w-full bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 disabled:from-stone-700 disabled:to-stone-900 text-white font-bold py-3 rounded-full shadow-lg transition-all border-4 border-double border-purple-950"
+              >
+                {loading ? 'Adding...' : 'Add Creature'}
+              </button>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-stone-900 rounded-2xl p-5 border-3 border-stone-700 shadow-inner space-y-3">
+              <h4 className="text-white font-bold">Quick Actions</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleHealAll}
+                  disabled={loading}
+                  className="bg-gradient-to-b from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all border-2 border-green-950"
+                >
+                  Heal All
+                </button>
+                <button
+                  onClick={handleUnlockAllBadges}
+                  disabled={loading}
+                  className="bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all border-2 border-yellow-950"
+                >
+                  All Badges
+                </button>
+              </div>
+            </div>
+
+            {/* Add SP */}
+            <div className="bg-stone-900 rounded-2xl p-5 border-3 border-stone-700 shadow-inner space-y-3">
+              <h4 className="text-white font-bold">Add Study Points</h4>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={spAmount}
+                  onChange={(e) => setSPAmount(parseInt(e.target.value) || 100)}
+                  className="flex-1 p-2 rounded-lg bg-stone-800 border-2 border-stone-600 text-amber-100 focus:outline-none focus:border-purple-500"
+                  placeholder="Amount"
+                />
+                <button
+                  onClick={handleAddSP}
+                  disabled={loading}
+                  className="bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all border-2 border-blue-950"
+                >
+                  Add SP
+                </button>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-gradient-to-br from-red-950 to-red-900 rounded-2xl p-5 border-4 border-double border-red-800 shadow-lg space-y-3">
+              <h4 className="text-red-200 font-bold">⚠️ Danger Zone</h4>
+              <button
+                onClick={handleClearTeam}
+                disabled={loading}
+                className="w-full bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-bold py-3 rounded-full shadow-lg transition-all border-4 border-double border-red-950"
+              >
+                Clear All Creatures
+              </button>
+            </div>
+
+            {/* Console Tips */}
+            <div className="bg-gradient-to-r from-indigo-900 to-purple-950 border-3 border-indigo-700 rounded-2xl p-4">
+              <p className="text-indigo-200 text-sm font-semibold mb-2">
+                💡 Console Commands:
+              </p>
+              <code className="text-xs text-indigo-300 block">
+                window.devTools.actions.listCreatures(supabase)<br/>
+                window.devTools.actions.levelUpCreature(supabase, id, levels)<br/>
+                window.devTools.actions.maxCreature(supabase, id)
+              </code>
             </div>
           </div>
         )}
