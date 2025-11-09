@@ -57,10 +57,10 @@ VITE_SUPABASE_ANON_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
 ```
 
-#Web App Link
+## Web App Link
 https://studymon.netlify.app/
 
-#Future Plans
+## Future Plans
 1. Monster evolutions
 2. Friend battles
 3. Daily quests & streaks
