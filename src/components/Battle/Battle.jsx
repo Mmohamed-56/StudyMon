@@ -157,11 +157,20 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
       if (!creatureData) return
 
+      // Get type_id first
+      const { data: typeData } = await supabase
+        .from('creature_types')
+        .select('id')
+        .eq('name', creatureData.type)
+        .single()
+
+      if (!typeData) return
+
       // Get a level 1 skill of matching type
       const { data: skillData } = await supabase
         .from('skills')
-        .select('*, creature_types!inner(name)')
-        .eq('creature_types.name', creatureData.type)
+        .select('*')
+        .eq('type_id', typeData.id)
         .eq('skill_level', 1)
         .limit(1)
         .single()
@@ -188,15 +197,27 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
   const loadWildSkills = async (creatureType) => {
     try {
-      // Get 1 skill of each level for this type
+      // First, get the type_id from creature_types
+      const { data: typeData } = await supabase
+        .from('creature_types')
+        .select('id')
+        .eq('name', creatureType)
+        .single()
+
+      if (!typeData) {
+        console.error('Could not find type:', creatureType)
+        return
+      }
+
+      // Get 1 skill of each level for this type_id
       const skills = []
       const uses = {}
 
       for (let level = 1; level <= 4; level++) {
         const { data } = await supabase
           .from('skills')
-          .select('*, creature_types!inner(name)')
-          .eq('creature_types.name', creatureType)
+          .select('*')
+          .eq('type_id', typeData.id)
           .eq('skill_level', level)
           .limit(1)
 
