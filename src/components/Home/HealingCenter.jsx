@@ -29,9 +29,9 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
     setUserAnswer('')
 
     try {
-      // Build topic string with subtopic if selected
-      const topicString = currentTopic.active_subtopic 
-        ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+      // Build topic string with context if available
+      const topicString = currentTopic.topic_context
+        ? `${currentTopic.topic_name} (${currentTopic.topic_context})`
         : currentTopic.topic_name
 
       // Generate question using Claude AI
@@ -101,9 +101,9 @@ function HealingCenter({ playerTeam, currentTopic, onHealComplete }) {
     setLoading(true)
 
     try {
-      // Build topic string with subtopic if selected
-      const topicString = currentTopic.active_subtopic 
-        ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+      // Build topic string with context if available
+      const topicString = currentTopic.topic_context
+        ? `${currentTopic.topic_name} (${currentTopic.topic_context})`
         : currentTopic.topic_name
 
       // Generate a fresh question

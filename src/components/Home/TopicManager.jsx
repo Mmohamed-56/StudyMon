@@ -14,9 +14,53 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
   const [uploadingFile, setUploadingFile] = useState(false)
   const [questionSource, setQuestionSource] = useState(currentTopic?.question_source || QUESTION_SOURCES.GENERAL)
   const [loading, setLoading] = useState(false)
-  const [showSubtopics, setShowSubtopics] = useState(false)
-  const [newSubtopic, setNewSubtopic] = useState('')
-  const [selectedSubtopic, setSelectedSubtopic] = useState(currentTopic?.active_subtopic || null)
+  const [contextSuggestions, setContextSuggestions] = useState([])
+  const [selectedContext, setSelectedContext] = useState('')
+  const [generatingContexts, setGeneratingContexts] = useState(false)
+
+  const generateTopicContexts = async () => {
+    if (!newTopicName.trim()) return
+
+    setGeneratingContexts(true)
+    try {
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      
+      let contexts = []
+
+      if (!isDev) {
+        // Production: Use Claude
+        const response = await fetch('/.netlify/functions/generate-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic: newTopicName.trim() })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          contexts = data.contexts
+        }
+      }
+
+      // Fallback suggestions
+      if (contexts.length === 0) {
+        contexts = [
+          `General ${newTopicName}`,
+          `Academic course/class`,
+          `Professional/Career topic`,
+          `Personal interest/hobby`
+        ]
+      }
+
+      setContextSuggestions(contexts)
+      setSelectedContext(contexts[0] || '')
+    } catch (error) {
+      console.error('Error generating contexts:', error)
+      setContextSuggestions([`General ${newTopicName}`])
+      setSelectedContext(`General ${newTopicName}`)
+    } finally {
+      setGeneratingContexts(false)
+    }
+  }
 
   const handleCreateTopic = async (e) => {
     e.preventDefault()
@@ -27,13 +71,14 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Create new topic
+      // Create new topic with context
       const { data: newTopic, error } = await supabase
         .from('user_topics')
         .insert({
           user_id: user.id,
           topic_name: newTopicName.trim(),
           description: newTopicDescription.trim() || null,
+          topic_context: selectedContext || null,
           is_active: true
         })
         .select()
@@ -43,8 +88,11 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
 
       setNewTopicName('')
       setNewTopicDescription('')
+      setContextSuggestions([])
+      setSelectedContext('')
       setShowNewTopic(false)
       onTopicsUpdate()
+      onTopicChange(newTopic)
     } catch (error) {
       console.error('Error creating topic:', error)
       alert('Error creating topic: ' + error.message)
@@ -407,16 +455,52 @@ function TopicManager({ currentTopic, topics, onTopicChange, onTopicsUpdate }) {
                 <form onSubmit={handleCreateTopic} className="space-y-4">
                   <div>
                     <label className="block text-amber-100 font-semibold mb-2">Topic Name</label>
-                    <input
-                      type="text"
-                      value={newTopicName}
-                      onChange={(e) => setNewTopicName(e.target.value)}
-                      placeholder="e.g., Biology, Calculus, History"
-                      className="w-full p-3 rounded-2xl bg-stone-900 border-3 border-purple-700 text-amber-100 placeholder-stone-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-800 shadow-inner font-semibold"
-                      autoFocus
-                      required
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTopicName}
+                        onChange={(e) => {
+                          setNewTopicName(e.target.value)
+                          // Clear context when topic name changes
+                          if (contextSuggestions.length > 0) {
+                            setContextSuggestions([])
+                            setSelectedContext('')
+                          }
+                        }}
+                        placeholder="e.g., Deadlock, Physics, Python"
+                        className="flex-1 p-3 rounded-2xl bg-stone-900 border-3 border-purple-700 text-amber-100 placeholder-stone-500 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-800 shadow-inner font-semibold"
+                        autoFocus
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={generateTopicContexts}
+                        disabled={!newTopicName.trim() || generatingContexts}
+                        className="bg-gradient-to-b from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold px-4 rounded-2xl border-3 border-purple-950 shadow-lg transition-all"
+                      >
+                        {generatingContexts ? '...' : '🤖'}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Context Selector */}
+                  {contextSuggestions.length > 0 && (
+                    <div>
+                      <label className="block text-amber-100 font-semibold mb-2">What kind of "{newTopicName}"?</label>
+                      <select
+                        value={selectedContext}
+                        onChange={(e) => setSelectedContext(e.target.value)}
+                        className="w-full p-3 rounded-2xl bg-stone-900 border-3 border-purple-700 text-amber-100 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-800 shadow-inner font-semibold"
+                      >
+                        {contextSuggestions.map((context, index) => (
+                          <option key={index} value={context}>{context}</option>
+                        ))}
+                      </select>
+                      <p className="text-purple-300 text-xs mt-2">
+                        This helps AI generate relevant questions for your specific "{newTopicName}"
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-amber-100 font-semibold mb-2">Description (Optional)</label>

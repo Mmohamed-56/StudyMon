@@ -38,10 +38,12 @@ function QuestionModal({
       let generatedQuestion = null
 
       if (currentTopic) {
-        // Build topic string with subtopic if selected
-        const topicString = currentTopic.active_subtopic 
-          ? `${currentTopic.topic_name} - ${currentTopic.active_subtopic}`
+        // Build topic string with context if available
+        const topicString = currentTopic.topic_context
+          ? `${currentTopic.topic_name} (${currentTopic.topic_context})`
           : currentTopic.topic_name
+
+        console.log('Generating question for:', topicString)
 
         // Use AI to generate topic-specific question
         const questions = await generateQuestionsWithClaude(
@@ -51,7 +53,7 @@ function QuestionModal({
         )
         console.log('Got questions from AI:', questions)
         generatedQuestion = questions && questions.length > 0 ? questions[0] : null
-      } else {
+      } else{
         // Fallback to database questions
         const { data, error } = await supabase
           .from('battle_questions')
