@@ -170,6 +170,7 @@ function Dashboard() {
         {activeTab === 'battle' && (
           <Battle 
             playerTeam={playerTeam}
+            trainerInfo={trainerInfo}
             currentTopic={currentTopic}
             onExit={async () => {
               // Reload trainer data to reflect battle results

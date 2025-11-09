@@ -4,8 +4,11 @@ import { getTypeEffectiveness } from '../../utils/typechart'
 import QuestionModal from './QuestionModal'
 import XPBar from '../Shared/XPBar'
 import LevelUpModal from '../Shared/LevelUpModal'
+import femaleRunning from '../../assets/runningTrainers/female-running.gif'
+import maleRunning from '../../assets/runningTrainers/male-running.gif'
+import nonbinaryRunning from '../../assets/runningTrainers/nonbinary-running.gif'
 
-function Battle({ playerTeam, onExit, currentTopic }) {
+function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   // Battle state
   const [activePlayerCreature, setActivePlayerCreature] = useState(null)
   const [wildCreature, setWildCreature] = useState(null)
@@ -590,10 +593,21 @@ function Battle({ playerTeam, onExit, currentTopic }) {
   }
 
   if (loading) {
+    // Select trainer sprite based on gender
+    const runningSprite = 
+      trainerInfo?.trainer_gender === 'female' ? femaleRunning :
+      trainerInfo?.trainer_gender === 'male' ? maleRunning :
+      nonbinaryRunning
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-stone-800 via-stone-900 to-zinc-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">⚔️</div>
+          <img 
+            src={runningSprite} 
+            alt="Trainer running"
+            className="w-32 h-32 mx-auto mb-4"
+            style={{ imageRendering: 'pixelated' }}
+          />
           <p className="text-amber-50 text-2xl font-bold">Loading battle...</p>
         </div>
       </div>
