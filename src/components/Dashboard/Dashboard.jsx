@@ -10,6 +10,7 @@ import TutorialModal from '../Shared/TutorialModal'
 import maleTrainer from '../../assets/trainers/male.gif'
 import femaleTrainer from '../../assets/trainers/female.gif'
 import nonbinaryTrainer from '../../assets/trainers/nonbinary.gif'
+import AudioControls from '../Shared/AudioControls'
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('home')
@@ -217,6 +218,9 @@ function Dashboard() {
           localStorage.setItem('studymon_tutorial_seen', 'true')
         }}
       />
+
+      {/* Floating Audio Controls */}
+      <AudioControls />
     </div>
   )
 }
