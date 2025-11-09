@@ -132,21 +132,6 @@ export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) 
   }
 
   // In production, try Claude API first, fallback to mocks
-  /* NETLIFY BACKEND - Re-enabled! */
-  
-  // Check if running on localhost or production
-  const isDev = window.location.hostname === 'localhost'
-  
-  if (isDev) {
-    // Development: Use mock questions
-    const questions = []
-    for (let i = 0; i < count; i++) {
-      questions.push(await generateQuestion(topic, difficulty))
-    }
-    return questions
-  }
-
-  // Production: Call Netlify function
   try {
     console.log('[PRODUCTION] Calling Claude API via backend...')
     const response = await fetch('/.netlify/functions/generate-questions', {
