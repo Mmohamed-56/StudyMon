@@ -110,11 +110,11 @@ function TrainerSetup({ onComplete }) {
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
                   <div className="relative flex flex-col items-center">
-                    {/* Shadow base */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-3 bg-gradient-to-b from-stone-700/60 to-stone-950/80 rounded-full blur-sm"></div>
-                    
-                    {/* Trainer sprite preview */}
-                    <div className="mb-4">
+                    {/* Trainer sprite preview with shadow */}
+                    <div className="mb-4 relative">
+                      {/* Shadow base */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-gradient-to-b from-stone-700/60 to-stone-950/80 rounded-full blur-sm"></div>
+                      
                       <img 
                         src={g.sprite} 
                         alt={g.label}
