@@ -74,7 +74,6 @@ Requirements:
 
 Current timestamp: ${Date.now()} (use this for randomness)`
         }]
-        }]
       })
     })
 
