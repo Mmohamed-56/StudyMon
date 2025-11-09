@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
 import XPBar from '../Shared/XPBar'
 import CreatureSprite from '../Shared/CreatureSprite'
+import CreatureSkillsModal from './CreatureSkillsModal'
 
 function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
   const [dragging, setDragging] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [selectedCreature, setSelectedCreature] = useState(null)
 
   // Party is creatures with party_position 1-4
   // Benched are creatures with party_position = null
@@ -170,7 +172,8 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                 return (
                   <div
                     key={creature.id}
-                    className="bg-gradient-to-b from-green-700 to-green-900 rounded-3xl p-4 text-center border-4 border-double border-green-950 shadow-xl relative overflow-hidden group"
+                    className="bg-gradient-to-b from-green-700 to-green-900 rounded-3xl p-4 text-center border-4 border-double border-green-950 shadow-xl relative overflow-hidden group cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all"
+                    onClick={() => setSelectedCreature(creature)}
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl"></div>
                     <div className="relative">
@@ -181,7 +184,10 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
 
                       {/* Remove Button */}
                       <button
-                        onClick={() => removeFromParty(creature)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeFromParty(creature)
+                        }}
                         disabled={saving}
                         className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 rounded-full w-7 h-7 flex items-center justify-center border-2 border-red-900 shadow-lg transition-all opacity-0 group-hover:opacity-100"
                       >
@@ -275,39 +281,49 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
                 return (
                   <div
                     key={creature.id}
-                    onClick={() => !saving && addToParty(creature)}
                     className="bg-gradient-to-b from-slate-700 to-slate-900 rounded-3xl p-4 text-center border-4 border-double border-slate-950 shadow-xl cursor-pointer hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group"
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent group-hover:from-white/10 rounded-3xl transition-all"></div>
                     <div className="relative">
-                      <div className="flex justify-center mb-2">
-                        <CreatureSprite 
-                          creatureName={creature.creatures.name}
-                          emoji={creature.creatures.sprite}
-                          className="text-5xl drop-shadow-lg"
-                          size="w-20 h-20"
-                        />
-                      </div>
-                      <p className="text-amber-50 font-bold drop-shadow text-sm">{creature.creatures.name}</p>
-                      <p className="text-slate-300 text-xs font-semibold">Lv. {creature.level}</p>
-                      
-                      <div className="mt-3 space-y-2">
-                        <div className="w-full bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 rounded-full h-2 border border-stone-800 shadow-inner">
-                          <div 
-                            className="bg-gradient-to-r from-lime-400 to-green-500 h-full rounded-full shadow-lg"
-                            style={{ width: `${hpPercentage}%` }}
+                      <div 
+                        onClick={() => setSelectedCreature(creature)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex justify-center mb-2">
+                          <CreatureSprite 
+                            creatureName={creature.creatures.name}
+                            emoji={creature.creatures.sprite}
+                            className="text-5xl drop-shadow-lg"
+                            size="w-20 h-20"
                           />
                         </div>
-                        <p className="text-xs text-amber-100 font-semibold drop-shadow">
-                          {currentHP}/{maxHP} HP
-                        </p>
+                        <p className="text-amber-50 font-bold drop-shadow text-sm">{creature.creatures.name}</p>
+                        <p className="text-slate-300 text-xs font-semibold">Lv. {creature.level}</p>
                         
-                        <XPBar currentXP={creature.current_xp || 0} level={creature.level} />
+                        <div className="mt-3 space-y-2">
+                          <div className="w-full bg-gradient-to-r from-stone-950 via-stone-900 to-stone-950 rounded-full h-2 border border-stone-800 shadow-inner">
+                            <div 
+                              className="bg-gradient-to-r from-lime-400 to-green-500 h-full rounded-full shadow-lg"
+                              style={{ width: `${hpPercentage}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-amber-100 font-semibold drop-shadow">
+                            {currentHP}/{maxHP} HP
+                          </p>
+                          
+                          <XPBar currentXP={creature.current_xp || 0} level={creature.level} />
+                        </div>
                       </div>
 
-                      <div className="mt-2 text-xs text-slate-400 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                        Click to add
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          !saving && addToParty(creature)
+                        }}
+                        className="mt-2 w-full bg-gradient-to-b from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 py-2 rounded-xl text-xs font-bold text-amber-50 border-2 border-green-900 transition-all"
+                      >
+                        Add to Party
+                      </button>
                     </div>
                   </div>
                 )
@@ -323,6 +339,15 @@ function PartyManager({ playerTeam, allUserCreatures, onUpdate }) {
             <p className="text-amber-50 font-bold text-xl">Updating party...</p>
           </div>
         </div>
+      )}
+
+      {/* Skills Modal */}
+      {selectedCreature && (
+        <CreatureSkillsModal
+          creature={selectedCreature}
+          onClose={() => setSelectedCreature(null)}
+          onUpdate={onUpdate}
+        />
       )}
     </div>
   )
