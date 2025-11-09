@@ -57,8 +57,12 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   }, [wildHP, wildCreature])
 
   const loadBattle = async () => {
+    // Minimum delay to show running animation (1.5 seconds)
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 1500))
+    
     if (!playerTeam || playerTeam.length === 0) {
       setBattleLog(['You need at least one creature in your party!'])
+      await minLoadTime
       setLoading(false)
       return
     }
@@ -70,6 +74,7 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
 
     if (party.length === 0) {
       setBattleLog(['You need to set up your party first! Go to Party tab.'])
+      await minLoadTime
       setLoading(false)
       return
     }
@@ -127,6 +132,9 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
 
       // Load wild creature skills
       await loadWildSkills(wild.type)
+
+      // Wait for minimum load time before showing battle
+      await minLoadTime
 
       setActivePlayerCreature(player)
       setWildCreature(wild)
