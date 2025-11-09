@@ -43,20 +43,22 @@ exports.handler = async (event) => {
       ? `${description}` 
       : `A comprehensive gym series covering ${topicContext}`
 
-    // Generate gym series with Claude
+    // Generate gym themes only (questions generated on-demand later)
     const message = await anthropic.messages.create({
       model: 'claude-3-5-haiku-20241022',
-      max_tokens: 16000,
+      max_tokens: 4096,
       temperature: 0.8,
       messages: [{
         role: 'user',
         content: `You are designing a Pokemon-style gym challenge series for studying "${topicContext}" (Category: ${category}).
 
-Create 8 themed gyms with progressive difficulty. Each gym should have:
+Create 8 themed gyms with progressive difficulty. Each gym should focus on a different aspect of ${topicContext}.
+
+For each gym provide:
 1. A creative gym leader name (thematic, like "Professor Newton" or "Captain Syntax")
 2. A specific badge name related to the subtopic (like "Mechanics Badge" or "Grammar Badge")
 3. A single emoji badge icon
-4. 40 unique study questions with varied phrasing
+4. A brief focus area (what this gym specializes in)
 
 Difficulty tiers:
 - Gyms 1-2: Easy (introductory, basic concepts)
@@ -75,16 +77,21 @@ Return ONLY valid JSON in this exact format:
       "badgeName": "Mechanics Badge",
       "badgeEmoji": "⚙️",
       "difficultyTier": "easy",
-      "questions": [
-        { "question": "What is Newton's first law?", "answer": "An object in motion stays in motion unless acted upon by a force" },
-        ... 39 more questions
-      ]
+      "focusArea": "Newton's laws of motion and basic kinematics"
     },
-    ... 7 more gyms
+    {
+      "gymNumber": 2,
+      "leaderName": "Dr. Hooke",
+      "badgeName": "Elasticity Badge",
+      "badgeEmoji": "🔧",
+      "difficultyTier": "easy",
+      "focusArea": "Springs, elastic forces, and Hooke's law"
+    },
+    ... 6 more gyms
   ]
 }
 
-Make questions DIVERSE and UNIQUE. Avoid repetition. Focus each gym on a specific subtopic within ${topicContext}.`
+Make each gym UNIQUE with distinct themes within ${topicContext}.`
       }]
     })
 
@@ -110,20 +117,11 @@ Make questions DIVERSE and UNIQUE. Avoid repetition. Focus each gym on a specifi
       throw new Error('AI did not return 8 gyms')
     }
 
-    // Validate each gym has 40 questions
-    for (let gym of parsedData.gyms) {
-      if (!gym.questions || gym.questions.length < 40) {
-        console.warn(`Gym ${gym.gymNumber} has only ${gym.questions?.length || 0} questions, padding...`)
-        // Pad with fallback questions if needed
-        while (!gym.questions || gym.questions.length < 40) {
-          gym.questions = gym.questions || []
-          gym.questions.push({
-            question: `Sample question about ${topicContext} (${gym.difficultyTier})`,
-            answer: 'Sample answer'
-          })
-        }
-      }
-    }
+    // Questions will be generated on-demand when user first enters each gym
+    // For now, set empty questions array
+    parsedData.gyms.forEach(gym => {
+      gym.questions = [] // Will be populated on first access
+    })
 
     return {
       statusCode: 200,

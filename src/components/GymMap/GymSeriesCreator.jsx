@@ -83,7 +83,8 @@ function GymSeriesCreator({ onBack, onCreated }) {
         badge_name: gym.badgeName,
         badge_emoji: gym.badgeEmoji,
         difficulty_tier: gym.difficultyTier,
-        questions: gym.questions,
+        focus_area: gym.focusArea,
+        questions: gym.questions || [],
         gym_creatures: gym.creatures || []
       }))
 
@@ -131,9 +132,9 @@ function GymSeriesCreator({ onBack, onCreated }) {
             className="w-24 h-24 mx-auto mb-6 animate-bounce" 
             style={{ imageRendering: 'pixelated' }} 
           />
-          <p className="text-amber-50 text-2xl font-bold mb-4">Generating Your Gym Series...</p>
-          <p className="text-amber-200 text-lg mb-2">{progress}</p>
-          <p className="text-stone-400 text-sm">This may take 30-60 seconds...</p>
+            <p className="text-amber-50 text-2xl font-bold mb-4">Generating Your Gym Series...</p>
+            <p className="text-amber-200 text-lg mb-2">{progress}</p>
+            <p className="text-stone-400 text-sm">This should take ~10-15 seconds...</p>
         </div>
       ) : (
         <div className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-3xl p-8 border-8 border-double border-stone-950 shadow-2xl space-y-6">
@@ -213,8 +214,8 @@ function GymSeriesCreator({ onBack, onCreated }) {
           <div className="bg-gradient-to-r from-blue-900 to-indigo-950 rounded-2xl p-4 border-4 border-blue-950">
             <p className="text-blue-200 text-sm font-semibold mb-2">ℹ️ What happens next:</p>
             <ul className="text-blue-300 text-sm space-y-1 list-disc list-inside">
-              <li>AI generates 8 themed gym leaders</li>
-              <li>Creates 320 unique questions (40 per gym)</li>
+              <li>AI generates 8 themed gym leaders (~10 seconds)</li>
+              <li>Questions generated when gyms are first entered</li>
               <li>Gyms 1-2: Easy | 3-4: Medium | 5-6: Hard | 7-8: Expert</li>
               <li>Series becomes public for all players!</li>
             </ul>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../utils/supabase'
 import trophy from '../../assets/icons/trophy.png'
+import thinking from '../../assets/icons/thinking.png'
 
 function GymSeriesDetail({ series, onBack, onStartGym }) {
+  const [generatingGym, setGeneratingGym] = useState(null)
   const [gyms, setGyms] = useState([])
   const [userProgress, setUserProgress] = useState({})
   const [loading, setLoading] = useState(true)
@@ -54,6 +56,58 @@ function GymSeriesDetail({ series, onBack, onStartGym }) {
 
   const getBadgeCount = () => {
     return Object.values(userProgress).filter(p => p.defeated).length
+  }
+
+  const handleGymClick = async (gym) => {
+    if (!canAccessGym(gym.gym_number)) return
+
+    try {
+      // Check if questions already generated
+      if (!gym.questions || gym.questions.length === 0) {
+        // Generate questions on-demand
+        setGeneratingGym(gym.gym_number)
+
+        const response = await fetch('/.netlify/functions/generate-gym-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            seriesName: series.series_name,
+            subtopic: series.subtopic,
+            gymLeaderName: gym.gym_leader_name,
+            focusArea: gym.focus_area,
+            difficultyTier: gym.difficulty_tier
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`Failed to generate questions: ${response.status}`)
+        }
+
+        const { questions } = await response.json()
+
+        // Save questions to database
+        const { error } = await supabase
+          .from('gym_series_gyms')
+          .update({ questions })
+          .eq('id', gym.id)
+
+        if (error) {
+          console.error('Error saving questions:', error)
+          throw new Error('Failed to save questions')
+        }
+
+        // Update local state
+        gym.questions = questions
+        setGeneratingGym(null)
+      }
+
+      // Start the gym battle
+      onStartGym(series, gym)
+    } catch (error) {
+      console.error('Error preparing gym:', error)
+      alert('Failed to prepare gym. Please try again.')
+      setGeneratingGym(null)
+    }
   }
 
   if (loading) {
@@ -120,7 +174,7 @@ function GymSeriesDetail({ series, onBack, onStartGym }) {
           return (
             <div
               key={gym.id}
-              onClick={() => isUnlocked && onStartGym(series, gym)}
+              onClick={() => isUnlocked && handleGymClick(gym)}
               className={`rounded-3xl p-6 text-center border-8 border-double shadow-xl transition-all relative overflow-hidden ${
                 isDefeated
                   ? 'bg-gradient-to-br from-amber-700 to-orange-800 border-amber-950 cursor-pointer hover:shadow-2xl hover:-translate-y-1'
@@ -183,6 +237,23 @@ function GymSeriesDetail({ series, onBack, onStartGym }) {
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-3xl font-bold text-amber-50 mb-2">Series Complete!</h2>
           <p className="text-amber-200 text-lg">You've mastered all 8 {series.series_name} gyms!</p>
+        </div>
+      )}
+
+      {/* Generating Questions Overlay */}
+      {generatingGym && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-3xl p-12 text-center border-8 border-double border-stone-950 shadow-2xl max-w-md">
+            <img 
+              src={thinking} 
+              alt="Generating" 
+              className="w-24 h-24 mx-auto mb-6 animate-bounce" 
+              style={{ imageRendering: 'pixelated' }} 
+            />
+            <p className="text-amber-50 text-2xl font-bold mb-4">Preparing Gym {generatingGym}...</p>
+            <p className="text-amber-200 text-lg mb-2">Generating 40 questions</p>
+            <p className="text-stone-400 text-sm">This may take 15-30 seconds...</p>
+          </div>
         </div>
       )}
     </div>
