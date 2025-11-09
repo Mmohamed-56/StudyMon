@@ -15,7 +15,15 @@ import thinking from '../../assets/icons/thinking.png'
 import flee from '../../assets/icons/flee.png'
 import CreatureSprite from '../Shared/CreatureSprite'
 
-function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
+function Battle({ 
+  playerTeam, 
+  trainerInfo, 
+  onExit, 
+  currentTopic,
+  mode = 'wild', // 'wild' or 'gym'
+  gymData = null, // { series, gym, questions }
+  onGymVictory = null
+}) {
   // Battle state
   const [activePlayerCreature, setActivePlayerCreature] = useState(null)
   const [wildCreature, setWildCreature] = useState(null)
@@ -40,6 +48,11 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   const [leveledUpCreature, setLeveledUpCreature] = useState(null)
   const [newLevel, setNewLevel] = useState(0)
   
+  // Gym mode state
+  const [gymCreatureIndex, setGymCreatureIndex] = useState(0) // Which of 3 gym creatures
+  const [gymQuestionIndex, setGymQuestionIndex] = useState(0) // Which question to use next
+  const [gymCreaturesDefeated, setGymCreaturesDefeated] = useState(0)
+  
   // Add current_xp to creature state
   useEffect(() => {
     if (activePlayerCreature) {
@@ -56,12 +69,14 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   }, [playerTeam])
 
   useEffect(() => {
-    // Show catch button when wild HP < 30%
-    if (wildCreature && wildHP > 0) {
+    // Show catch button when wild HP < 30% (not in gym mode)
+    if (mode !== 'gym' && wildCreature && wildHP > 0) {
       const hpPercent = (wildHP / wildCreature.maxHP) * 100
       setShowCatchButton(hpPercent < 30)
+    } else {
+      setShowCatchButton(false)
     }
-  }, [wildHP, wildCreature])
+  }, [wildHP, wildCreature, mode])
 
   const loadBattle = async () => {
     // Minimum delay to show running animation (1.5 seconds)
@@ -92,7 +107,7 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
     // Load player's skills
     await loadPlayerSkills(activeCreature)
     
-    // Get all creatures for wild encounter
+    // Get all creatures for encounter
     const { data: creatures } = await supabase
       .from('creatures')
       .select('*')
@@ -124,18 +139,49 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
         }
       }
       
-      // Wild creature (random, exclude player's)
-      const availableWild = creatures.filter(
-        c => !playerTeam.some(pt => pt.creatures.id === c.id)
-      )
-      const wildData = availableWild.length > 0
-        ? availableWild[Math.floor(Math.random() * availableWild.length)]
-        : creatures[Math.floor(Math.random() * creatures.length)]
+      let wild
       
-      const wild = calculateStats({
-        ...wildData,
-        level: Math.floor(Math.random() * 3) + 3
-      })
+      if (mode === 'gym' && gymData) {
+        // Gym mode: Load gym leader's creature
+        const gymLevel = 10 + ((gymData.gym.gym_number - 1) * 3) // Gym 1=10, Gym 2=13, etc.
+        const gymTypes = ['Fire', 'Water', 'Grass'] // Mix of types
+        const creatureType = gymTypes[gymCreatureIndex % 3]
+        
+        // Find a creature of this type
+        const typeCreatures = creatures.filter(c => c.type.toLowerCase() === creatureType.toLowerCase())
+        const wildData = typeCreatures.length > 0 
+          ? typeCreatures[Math.floor(Math.random() * typeCreatures.length)]
+          : creatures[Math.floor(Math.random() * creatures.length)]
+        
+        wild = calculateStats({
+          ...wildData,
+          level: gymLevel + (gymCreatureIndex === 2 ? 2 : 0) // Ace is +2 levels
+        })
+        
+        const message = gymCreatureIndex === 0 
+          ? `${gymData.gym.gym_leader_name} sent out ${wild.name}!`
+          : `${gymData.gym.gym_leader_name} sent out ${wild.name}!`
+        
+        setBattleLog(gymCreatureIndex === 0 
+          ? [`You're challenging ${gymData.gym.gym_leader_name}!`, message]
+          : [message]
+        )
+      } else {
+        // Wild mode: Random creature
+        const availableWild = creatures.filter(
+          c => !playerTeam.some(pt => pt.creatures.id === c.id)
+        )
+        const wildData = availableWild.length > 0
+          ? availableWild[Math.floor(Math.random() * availableWild.length)]
+          : creatures[Math.floor(Math.random() * creatures.length)]
+        
+        wild = calculateStats({
+          ...wildData,
+          level: Math.floor(Math.random() * 3) + 3
+        })
+        
+        setBattleLog([`A wild ${wild.name} appeared!`])
+      }
 
       // Load wild creature skills
       await loadWildSkills(wild.type)
@@ -148,7 +194,6 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
       setPlayerHP(Math.max(1, currentHP))
       setPlayerSP(currentSP)
       setWildHP(wild.maxHP)
-      setBattleLog([`A wild ${wild.name} appeared!`])
       setLoading(false)
     }
   }
@@ -328,8 +373,29 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
       setBattleLog(prev => [...prev, `${attacker.name} used ${skill.name}! Dealt ${damage} damage!`])
 
       if (newWildHP <= 0) {
-        setBattleLog(prev => [...prev, `${wildCreature.name} fainted! You win!`])
-        await saveBattleResults(true)
+        setBattleLog(prev => [...prev, `${wildCreature.name} fainted!`])
+        
+        // Check if gym mode and more creatures to fight
+        if (mode === 'gym' && gymCreatureIndex < 2) {
+          // Load next gym creature
+          setGymCreaturesDefeated(prev => prev + 1)
+          setGymCreatureIndex(prev => prev + 1)
+          setBattleLog(prev => [...prev, `Defeated ${gymCreaturesDefeated + 1}/3 gym creatures!`])
+          
+          // Reload battle with next creature
+          setTimeout(() => {
+            setLoading(true)
+            loadBattle()
+          }, 2000)
+        } else if (mode === 'gym' && gymCreatureIndex === 2) {
+          // All 3 gym creatures defeated - Victory!
+          setBattleLog(prev => [...prev, `You defeated ${gymData.gym.gym_leader_name}! You win the ${gymData.gym.badge_name}!`])
+          await handleGymVictory()
+        } else {
+          // Wild mode - normal win
+          setBattleLog(prev => [...prev, 'You win!'])
+          await saveBattleResults(true)
+        }
         return
       }
     } else {
@@ -637,9 +703,72 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
     }
   }
 
+  const handleGymVictory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Save/update gym progress
+      const { error } = await supabase
+        .from('user_gym_progress')
+        .upsert({
+          user_id: user.id,
+          series_id: gymData.series.id,
+          gym_number: gymData.gym.gym_number,
+          defeated: true,
+          defeated_at: new Date().toISOString(),
+          attempts: 1 // Will increment if already exists
+        }, {
+          onConflict: 'user_id,series_id,gym_number',
+          ignoreDuplicates: false
+        })
+
+      if (error) {
+        console.error('Error saving gym victory:', error)
+      }
+
+      // Increment series attempts
+      await supabase.rpc('increment_series_attempts', { p_series_id: gymData.series.id })
+
+      // Check if all 8 gyms completed
+      const { data: allProgress } = await supabase
+        .from('user_gym_progress')
+        .select('defeated')
+        .eq('user_id', user.id)
+        .eq('series_id', gymData.series.id)
+        .eq('defeated', true)
+
+      if (allProgress && allProgress.length === 8) {
+        await supabase.rpc('increment_series_completions', { p_series_id: gymData.series.id })
+        setBattleLog(prev => [...prev, '🎉 You completed the entire series! All 8 badges earned!'])
+      }
+
+      // Call victory callback
+      if (onGymVictory) {
+        onGymVictory(gymData.gym)
+      }
+
+      // Exit after showing victory message
+      setTimeout(() => {
+        onExit()
+      }, 3000)
+    } catch (error) {
+      console.error('Error handling gym victory:', error)
+      onExit()
+    }
+  }
+
   const handleFlee = async () => {
-    await saveBattleResults(false)
-    onExit()
+    if (mode === 'gym') {
+      // In gym mode, fleeing counts as a loss
+      setBattleLog(prev => [...prev, 'You fled from the gym challenge...'])
+      setTimeout(() => {
+        onExit()
+      }, 1500)
+    } else {
+      await saveBattleResults(false)
+      onExit()
+    }
   }
 
   if (loading) {
@@ -689,6 +818,23 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-800 via-stone-900 to-zinc-950 p-4">
       <div className="max-w-6xl mx-auto">
+        {/* Gym Mode Header */}
+        {mode === 'gym' && gymData && (
+          <div className="mb-6 bg-gradient-to-br from-purple-800 to-indigo-900 rounded-2xl p-4 border-4 border-purple-950 shadow-xl text-center">
+            <div className="flex items-center justify-center gap-4">
+              <div>
+                <p className="text-purple-200 text-sm font-semibold">{gymData.series.series_name}</p>
+                <p className="text-amber-50 text-xl font-bold">{gymData.gym.gym_leader_name}</p>
+                <p className="text-purple-300 text-sm">{gymData.gym.badge_name}</p>
+              </div>
+              <div className="bg-stone-950 rounded-2xl px-6 py-3 border-3 border-amber-700">
+                <p className="text-amber-50 font-bold text-2xl">{gymCreaturesDefeated + 1}/3</p>
+                <p className="text-amber-200 text-xs">Creatures</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Wild Creature */}
         <div className="mb-8 flex justify-end">
           <div className="inline-block bg-gradient-to-br from-stone-700 to-stone-800 rounded-2xl p-6 shadow-2xl border-4 border-stone-900">
@@ -892,6 +1038,15 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
         }}
         currentTopic={currentTopic}
         actionType={pendingSkill?.name === 'Catch' ? 'catch' : 'sp'}
+        gymMode={mode === 'gym'}
+        gymQuestions={gymData?.gym?.questions || []}
+        gymDifficulty={
+          gymData?.gym?.difficulty_tier === 'easy' ? 'easy' :
+          gymData?.gym?.difficulty_tier === 'medium' ? 'medium' :
+          gymData?.gym?.difficulty_tier === 'hard' ? 'hard' :
+          'hard'
+        }
+        onQuestionUsed={() => setGymQuestionIndex(prev => prev + 1)}
       />
 
       {/* Switch Menu */}

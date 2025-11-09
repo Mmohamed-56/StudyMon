@@ -13,7 +13,11 @@ function QuestionModal({
   onClose, 
   onCorrectAnswer, 
   currentTopic,
-  actionType = 'sp' // 'sp', 'catch'
+  actionType = 'sp', // 'sp', 'catch'
+  gymMode = false, // Is this a gym battle?
+  gymQuestions = [], // Pre-generated gym questions
+  gymDifficulty = 'medium', // Auto-difficulty for gym mode
+  onQuestionUsed = null // Callback when gym question is used
 }) {
   const [difficulty, setDifficulty] = useState(null)
   const [question, setQuestion] = useState(null)
@@ -30,8 +34,30 @@ function QuestionModal({
       setUserAnswer('')
       setShowResult(false)
       setIsCorrect(false)
+      
+      // In gym mode, auto-select difficulty and load question
+      if (gymMode && gymQuestions.length > 0) {
+        selectGymQuestion(gymDifficulty)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, gymMode])
+
+  const selectGymQuestion = (diff) => {
+    setDifficulty(diff)
+    setLoading(true)
+    setQuestion(null)
+
+    // Pick a random question from gym pool
+    if (gymQuestions.length > 0) {
+      const randomQuestion = gymQuestions[Math.floor(Math.random() * gymQuestions.length)]
+      setQuestion(randomQuestion)
+      if (onQuestionUsed) {
+        onQuestionUsed() // Track that we used a question
+      }
+    }
+    
+    setLoading(false)
+  }
 
   const selectDifficulty = async (diff) => {
     setDifficulty(diff)
@@ -200,8 +226,8 @@ function QuestionModal({
             </p>
           </div>
 
-          {/* Difficulty Selection */}
-          {!question && !loading && (
+          {/* Difficulty Selection (skip in gym mode) */}
+          {!gymMode && !question && !loading && (
             <div className="space-y-4">
               <button
                 onClick={() => selectDifficulty('easy')}

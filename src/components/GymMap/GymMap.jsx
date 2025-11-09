@@ -2,6 +2,7 @@ import { useState } from 'react'
 import GymBrowser from './GymBrowser'
 import GymSeriesCreator from './GymSeriesCreator'
 import GymSeriesDetail from './GymSeriesDetail'
+import Battle from '../Battle/Battle'
 
 function GymMap({ playerTeam, trainerInfo }) {
   const [view, setView] = useState('browser') // 'browser', 'creator', 'detail', 'battle'
@@ -26,8 +27,16 @@ function GymMap({ playerTeam, trainerInfo }) {
     setSelectedSeries(series)
     setSelectedGym(gym)
     setView('battle')
-    // TODO: Launch battle with gym mode
-    alert(`Starting ${gym.gym_leader_name}'s gym! (Battle integration coming next)`)
+  }
+
+  const handleGymVictory = (gym) => {
+    // Victory handled in Battle component, just return to detail view
+    setView('detail')
+  }
+
+  const handleBattleExit = () => {
+    // Return to gym detail view
+    setView('detail')
   }
 
   const handleBack = () => {
@@ -63,18 +72,18 @@ function GymMap({ playerTeam, trainerInfo }) {
         />
       )}
 
-      {view === 'battle' && selectedGym && (
-        <div className="text-center p-12">
-          <p className="text-amber-50 text-2xl font-bold mb-4">
-            Battle integration coming next!
-          </p>
-          <button
-            onClick={handleBack}
-            className="bg-gradient-to-b from-stone-700 to-stone-800 hover:from-stone-600 hover:to-stone-700 py-3 px-8 rounded-2xl font-bold text-amber-200 border-4 border-double border-stone-950 shadow-lg"
-          >
-            Back to Series
-          </button>
-        </div>
+      {view === 'battle' && selectedGym && selectedSeries && (
+        <Battle
+          playerTeam={playerTeam}
+          trainerInfo={trainerInfo}
+          mode="gym"
+          gymData={{
+            series: selectedSeries,
+            gym: selectedGym
+          }}
+          onExit={handleBattleExit}
+          onGymVictory={handleGymVictory}
+        />
       )}
     </div>
   )
