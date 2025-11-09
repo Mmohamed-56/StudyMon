@@ -7,6 +7,11 @@ import LevelUpModal from '../Shared/LevelUpModal'
 import femaleRunning from '../../assets/runningTrainers/female-running.gif'
 import maleRunning from '../../assets/runningTrainers/male-running.gif'
 import nonbinaryRunning from '../../assets/runningTrainers/nonbinary-running.gif'
+import gainSP from '../../assets/icons/gainSP.png'
+import star from '../../assets/icons/star.png'
+import switchIcon from '../../assets/icons/switch.png'
+import catchIcon from '../../assets/icons/catch.png'
+import thinking from '../../assets/icons/thinking.png'
 
 function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
   // Battle state
@@ -717,8 +722,8 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
             disabled={!isPlayerTurn || playerHP <= 0 || wildHP <= 0}
             className="bg-gradient-to-b from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-amber-950 disabled:border-stone-950 transition-all shadow-xl"
           >
-            <div className="text-lg">📚 Gain SP</div>
-            <div className="text-xs mt-1">Answer Question</div>
+            <img src={gainSP} alt="Gain SP" className="w-8 h-8 mx-auto mb-1" style={{ imageRendering: 'pixelated' }} />
+            <div className="text-xs mt-1">Gain SP</div>
           </button>
 
           {/* Use Skills Button */}
@@ -727,8 +732,8 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
             disabled={!isPlayerTurn || playerHP <= 0 || wildHP <= 0 || playerSkills.length === 0}
             className="bg-gradient-to-b from-blue-700 to-blue-900 hover:from-blue-600 hover:to-blue-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-blue-950 disabled:border-stone-950 transition-all shadow-xl"
           >
-            <div className="text-lg">⚔️ Use Skill</div>
-            <div className="text-xs mt-1">{playerSkills.length} Available</div>
+            <img src={star} alt="Use Skill" className="w-8 h-8 mx-auto mb-1" style={{ imageRendering: 'pixelated' }} />
+            <div className="text-xs mt-1">Use Skill</div>
           </button>
 
           {/* Switch */}
@@ -738,8 +743,8 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
               disabled={!isPlayerTurn || playerHP <= 0}
               className="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-purple-950 disabled:border-stone-950 transition-all shadow-xl"
             >
-              <div className="text-lg">🔄 Switch</div>
-              <div className="text-xs mt-1">Change Creature</div>
+              <img src={switchIcon} alt="Switch" className="w-8 h-8 mx-auto mb-1" style={{ imageRendering: 'pixelated' }} />
+              <div className="text-xs mt-1">Switch</div>
             </button>
           )}
 
@@ -750,8 +755,8 @@ function Battle({ playerTeam, trainerInfo, onExit, currentTopic }) {
               disabled={!isPlayerTurn || playerHP <= 0}
               className="bg-gradient-to-b from-emerald-700 to-emerald-900 hover:from-emerald-600 hover:to-emerald-800 disabled:from-stone-700 disabled:to-stone-900 text-amber-50 font-bold py-4 px-4 rounded-2xl border-4 border-double border-emerald-950 disabled:border-stone-950 transition-all shadow-xl"
             >
-              <div className="text-lg">⚡ Catch!</div>
-              <div className="text-xs mt-1">HP &lt; 30%</div>
+              <img src={catchIcon} alt="Catch" className="w-8 h-8 mx-auto mb-1" style={{ imageRendering: 'pixelated' }} />
+              <div className="text-xs mt-1">Catch!</div>
             </button>
           )}
 

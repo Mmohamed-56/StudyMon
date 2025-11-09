@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { generateQuestionsWithClaude } from '../../utils/aiService'
 import { supabase } from '../../utils/supabase'
+import thinking from '../../assets/icons/thinking.png'
+import star from '../../assets/icons/star.png'
+import gainSP from '../../assets/icons/gainSP.png'
+import catchIcon from '../../assets/icons/catch.png'
 
 function QuestionModal({ 
   isOpen, 
@@ -178,8 +182,14 @@ function QuestionModal({
         <div className="relative">
           {/* Header */}
           <div className="text-center mb-6">
+            <img 
+              src={actionType === 'catch' ? catchIcon : gainSP} 
+              alt={actionType === 'catch' ? 'Catch' : 'Gain SP'} 
+              className="w-16 h-16 mx-auto mb-4" 
+              style={{ imageRendering: 'pixelated' }} 
+            />
             <h2 className="text-3xl font-bold text-amber-50 mb-2 drop-shadow-lg">
-              {actionType === 'catch' ? '🎯 Catch Challenge!' : '📚 Gain SP'}
+              {actionType === 'catch' ? 'Catch Challenge!' : 'Gain SP'}
             </h2>
             <p className="text-slate-300 font-semibold">
               {actionType === 'catch' 
@@ -196,9 +206,12 @@ function QuestionModal({
                 className="w-full bg-gradient-to-b from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-green-950 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
-                <div className="relative">
-                  <div className="text-2xl mb-1">⭐ Easy</div>
-                  <div className="text-sm opacity-90">+5 SP Reward</div>
+                <div className="relative flex items-center justify-center gap-2">
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <div>
+                    <div className="text-2xl">Easy</div>
+                    <div className="text-sm opacity-90">+5 SP Reward</div>
+                  </div>
                 </div>
               </button>
 
@@ -207,9 +220,13 @@ function QuestionModal({
                 className="w-full bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-yellow-950 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
-                <div className="relative">
-                  <div className="text-2xl mb-1">⭐⭐ Medium</div>
-                  <div className="text-sm opacity-90">+10 SP Reward</div>
+                <div className="relative flex items-center justify-center gap-2">
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <div>
+                    <div className="text-2xl">Medium</div>
+                    <div className="text-sm opacity-90">+10 SP Reward</div>
+                  </div>
                 </div>
               </button>
 
@@ -218,9 +235,14 @@ function QuestionModal({
                 className="w-full bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-amber-50 font-bold py-6 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl border-4 border-double border-red-950 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent group-hover:from-white/30 transition-all"></div>
-                <div className="relative">
-                  <div className="text-2xl mb-1">⭐⭐⭐ Hard</div>
-                  <div className="text-sm opacity-90">+15 SP Reward</div>
+                <div className="relative flex items-center justify-center gap-2">
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <img src={star} alt="Star" className="w-6 h-6" style={{ imageRendering: 'pixelated' }} />
+                  <div>
+                    <div className="text-2xl">Hard</div>
+                    <div className="text-sm opacity-90">+15 SP Reward</div>
+                  </div>
                 </div>
               </button>
 
@@ -236,7 +258,12 @@ function QuestionModal({
           {/* Loading */}
           {loading && (
             <div className="text-center py-12">
-              <div className="text-5xl mb-4 animate-bounce">🤔</div>
+              <img 
+                src={thinking} 
+                alt="Thinking" 
+                className="w-20 h-20 mx-auto mb-4 animate-bounce" 
+                style={{ imageRendering: 'pixelated' }} 
+              />
               <p className="text-amber-50 text-xl font-bold mb-2">Generating question...</p>
               <p className="text-slate-400 text-sm">Please wait...</p>
             </div>
