@@ -100,40 +100,39 @@ export const generateQuestion = async (topic, difficulty = 'medium') => {
 
 // Claude API Integration via Netlify Backend
 export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) => {
-  // Always use mock questions for now (most reliable)
   console.log(`Generating ${count} ${difficulty} question(s) for ${topic}`)
   
-  try {
-    const questions = []
-    for (let i = 0; i < count; i++) {
-      const q = await generateQuestion(topic, difficulty)
-      if (q && q.question) {
-        questions.push(q)
+  // Check if running on localhost or production
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  
+  // In development, use mock questions (faster, no backend needed)
+  if (isDev) {
+    console.log('[DEV MODE] Using mock questions')
+    try {
+      const questions = []
+      for (let i = 0; i < count; i++) {
+        const q = await generateQuestion(topic, difficulty)
+        if (q && q.question) {
+          questions.push(q)
+        }
       }
-    }
-    
-    // Ensure we have at least one question
-    if (questions.length === 0) {
-      questions.push({
+      return questions.length > 0 ? questions : [{
         question: 'What is 2 + 2?',
         answer: '4',
         difficulty: difficulty
-      })
+      }]
+    } catch (error) {
+      console.error('Error generating mock questions:', error)
+      return [{
+        question: 'What is 2 + 2?',
+        answer: '4',
+        difficulty: difficulty
+      }]
     }
-    
-    console.log('Generated questions:', questions)
-    return questions
-  } catch (error) {
-    console.error('Error generating questions:', error)
-    // Always return at least one question
-    return [{
-      question: 'What is 2 + 2?',
-      answer: '4',
-      difficulty: difficulty
-    }]
   }
 
-  /* NETLIFY BACKEND (Disabled for now - enable when deployed properly)
+  // In production, try Claude API first, fallback to mocks
+  /* NETLIFY BACKEND - Re-enabled! */
   
   // Check if running on localhost or production
   const isDev = window.location.hostname === 'localhost'
@@ -149,6 +148,7 @@ export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) 
 
   // Production: Call Netlify function
   try {
+    console.log('[PRODUCTION] Calling Claude API via backend...')
     const response = await fetch('/.netlify/functions/generate-questions', {
       method: 'POST',
       headers: {
@@ -162,20 +162,29 @@ export const generateQuestionsWithClaude = async (topic, difficulty, count = 1) 
     })
 
     if (!response.ok) {
+      console.warn(`Backend returned ${response.status}, falling back to mocks`)
       throw new Error(`Backend error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('[PRODUCTION] Got questions from Claude:', data.questions)
     return data.questions
   } catch (error) {
     console.error('Error calling backend API:', error)
+    console.log('[PRODUCTION] Using mock questions as fallback')
     // Fallback to mock questions
     const questions = []
     for (let i = 0; i < count; i++) {
-      questions.push(await generateQuestion(topic, difficulty))
+      const q = await generateQuestion(topic, difficulty)
+      if (q && q.question) {
+        questions.push(q)
+      }
     }
-    return questions
+    return questions.length > 0 ? questions : [{
+      question: 'What is 2 + 2?',
+      answer: '4',
+      difficulty: difficulty
+    }]
   }
-  */
 }
 

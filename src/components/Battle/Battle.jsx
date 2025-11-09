@@ -157,11 +157,11 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
       if (!creatureData) return
 
-      // Get type_id first
+      // Get type_id first (case-insensitive)
       const { data: typeData } = await supabase
         .from('creature_types')
         .select('id')
-        .eq('name', creatureData.type)
+        .ilike('name', creatureData.type)
         .single()
 
       if (!typeData) return
@@ -197,11 +197,11 @@ function Battle({ playerTeam, onExit, currentTopic }) {
 
   const loadWildSkills = async (creatureType) => {
     try {
-      // First, get the type_id from creature_types
+      // First, get the type_id from creature_types (case-insensitive)
       const { data: typeData } = await supabase
         .from('creature_types')
         .select('id')
-        .eq('name', creatureType)
+        .ilike('name', creatureType)
         .single()
 
       if (!typeData) {
